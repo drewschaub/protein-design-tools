@@ -1,7 +1,5 @@
 ![Banner](assets/banner.png)
 
-# protein-design-tools
-
 A library of tools for protein design.
 
 ## Installation
