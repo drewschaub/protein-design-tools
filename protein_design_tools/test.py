@@ -23,7 +23,7 @@ radius_of_gyration = get_radgy(protein, atom_type="backbone")
 print(f"Radius of gyration (backbone): {radius_of_gyration:.8f} Å")
 
 # Calculate the radius of gyration of all the alanine helices in ~/Downloads/alanines/
-p = Path("/Users/schaubaj/Downloads/alanines/")
+p = Path("../../../../Downloads/alanines/")
 
 alanine_rg_dict_backbones = {}
 alanine_rg_dict_all = {}
