@@ -18,6 +18,10 @@ def get_coordinates(structure, atom_type="all", chains=None, residue_numbers=Non
     list of list of float: A list of [x, y, z] coordinates of the selected atoms.
     """
 
+    # If the user passed a string for chains, convert it to a list
+    if isinstance(chains, str):
+        chains = [chains]
+
     # Initialize an empty list to store the coordinates
     coordinates = []
     
@@ -56,7 +60,7 @@ def get_masses(structure, atom_type="all", chains=None, residue_numbers=None, re
     Parameters:
     structure (ProteinStructure): The protein structure to get the masses from.
     atom_type (str, optional): The type of atoms to get the masses from. Can be "all", "backbone", or "sidechain". Defaults to "all".
-    chains (list of str, optional): A list of chain names to get the masses from. If None, get the masses from all chains. Defaults to None.
+    chains (str or list of str, optional): A list of chain names to get the masses from, or a single chain as a string. If None, get the masses from all chains. Defaults to None.
     residue_numbers (list of int, optional): A list of residue numbers to get the masses from. If None, get the masses from all residues. Defaults to None.
     residue_indices (list of int, optional): A list of residue sequence indices to get the masses from. If None, get the masses from all residues. Defaults to None.
     residue_ids (list of str, optional): A list of residue sequence identifiers to get the masses from. If None, get the masses from all residues. Defaults to None.
@@ -64,6 +68,10 @@ def get_masses(structure, atom_type="all", chains=None, residue_numbers=None, re
     Returns:
     list of float: A list of masses of the selected atoms.
     """
+
+    # If the user passed a string for chains, convert it to a list
+    if isinstance(chains, str):
+        chains = [chains]
 
     # Initialize an empty list to store the masses
     masses = []
@@ -110,6 +118,10 @@ def get_radgyr(structure, atom_type="backbone", chains=None, residue_numbers=Non
     float: The radius of gyration of the selected atoms.
     """
 
+    # If the user passed a string for chains, convert it to a list
+    if isinstance(chains, str):
+        chains = [chains]
+
     # Get the coordinates of all atoms in the structure
     coordinates = get_coordinates(structure, atom_type=atom_type, chains=chains, residue_numbers=residue_numbers, residue_indices=residue_indices, residue_ids=residue_ids)
     masses = get_masses(structure, atom_type=atom_type, chains=chains, residue_numbers=residue_numbers, residue_indices=residue_indices, residue_ids=residue_ids)
@@ -150,6 +162,10 @@ def get_radgyr_alanine_helix(sequence_length, atom_type="backbone"):
     return radius_of_gyration
 
 def get_radgyr_ratio(structure, atom_type="backbone", chains=None, residue_numbers=None, residue_indices=None, residue_ids=None):
+
+    # If the user passed a string for chains, convert it to a list
+    if isinstance(chains, str):
+        chains = [chains]
 
     # Get the radius of gyration
     structure_radius_of_gyration = get_radgyr(structure, atom_type=atom_type, chains=chains, residue_numbers=residue_numbers, residue_indices=residue_indices, residue_ids=residue_ids)
