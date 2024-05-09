@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='protein-design-tools',
-    version='0.1.9',
+    version='0.1.10',
     author='Andrew Schaub',
     author_email='andrew.schaub@protonmail.com',
     description='A library of tools for protein design.',
