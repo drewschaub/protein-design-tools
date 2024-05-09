@@ -22,7 +22,7 @@ class ProteinStructure:
         def __init__(self, chain_name):
             # Chain objects will contain a list of Residue objects
             self.chain_name = chain_name
-            self.residues = []
+            self._residues = []
 
         class Residue:
             """
@@ -54,6 +54,16 @@ class ProteinStructure:
                 self.res_name_seq_i = f"{res_name}{res_seq}{i_code}"
 
                 self.atoms = []
+
+
+            def get_residues(self):
+                """
+                Return the residues of the protein structure.
+                
+                Returns:
+                list: A list of residues.
+                """
+                return self._residues
 
             class Atom:
                 """

@@ -170,9 +170,25 @@ def get_radgyr_ratio(structure, atom_type="backbone", chains=None, residue_numbe
     # Get the radius of gyration
     structure_radius_of_gyration = get_radgyr(structure, atom_type=atom_type, chains=chains, residue_numbers=residue_numbers, residue_indices=residue_indices, residue_ids=residue_ids)
 
-    # Get the radius of gyration of an ideal alanine helix of the same length. structure.get_sequences will return the sequendes of each chain of the protein, so these need to be summed
-    structure_seq_len = sum([len(sequence) for sequence in structure.get_sequence_dict().values()])
-    alanine_radius_of_gyration = get_radgyr_alanine_helix(structure_seq_len, atom_type=atom_type)
+    # Get the length of the protein structure for the chains, residue numbers, residue indices, and residue IDs specified
+    alanine_helix_length = 0
+    for chain in structure.chains:
+        if chains is not None and chain.chain_name not in chains:
+            continue
+        else:
+            for residue in chain.residues:
+                # Check if the list of residue numbers are in the list of chain.residues
+                if residue_numbers is not None and residue.res_seq not in residue_numbers:
+                    continue
+                else:
+                    alanine_helix_length += 1
+                # Check if the list of residue indices are in the list of chain.residues
+                if residue_indices is not None and residue.res_index not in residue_indices:
+                    continue
+                else:
+                    alanine_helix_length += 1
+
+    alanine_radius_of_gyration = get_radgyr_alanine_helix(alanine_helix_length, atom_type=atom_type)
 
     # Calculate the radius of gyration ratio
     radius_of_gyration_ratio = structure_radius_of_gyration / alanine_radius_of_gyration
