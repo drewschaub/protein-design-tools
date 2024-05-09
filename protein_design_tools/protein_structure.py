@@ -90,7 +90,7 @@ class ProteinStructure:
                     # Calculate the mass of the atom
                     self.mass = ATOMIC_WEIGHTS.get(element, 0.0)
     
-    def read_pdb(self, file_path, name=None):
+    def read_pdb(self, file_path, chains=None, name=None):
         # Set the name of the protein structure
         self.name = name
 
@@ -101,45 +101,45 @@ class ProteinStructure:
                 for line in f:
                     if line.startswith("ATOM"):
 
-                        # Check if the chain already exists in self.chains
+                        # If chain is not in self.chains and chain is in chains list or chains is None append chain to self.chains 
                         chain_name = line[21].strip()
                         chain = next((c for c in self.chains if c.chain_name == chain_name), None)
-                        if chain is None:
-                            # Create a Chain object and append it to self.chains
-                            chain = self.Chain(chain_name)
-                            self.chains.append(chain)
+                        if chains is None or chain_name in chains:
+                            if chain is None:
+                                chain = self.Chain(chain_name)
+                                self.chains.append(chain)
 
-                        # Check if the residue already exists in self.residues
-                        res_name = line[17:20].strip()
-                        res_seq = line[22:26].strip()
-                        i_code = line[26].strip()
-                        residue = next((r for r in chain.residues if r.res_seq == res_seq and r.i_code == i_code), None)
-                        if residue is None:
-                            # Create a Residue object and append it to self.residues
-                            residue = self.Chain.Residue(res_name, res_seq, i_code)
-                            # Check if the residue index is already assigned, if not assign it
-                            if residue.index is None:
-                                # assign it next index value in the chain
-                                residue.index = len(chain.residues)
-                            chain.residues.append(residue)
+                            # Check if the residue already exists in self.residues
+                            res_name = line[17:20].strip()
+                            res_seq = line[22:26].strip()
+                            i_code = line[26].strip()
+                            residue = next((r for r in chain.residues if r.res_seq == res_seq and r.i_code == i_code), None)
+                            if residue is None:
+                                # Create a Residue object and append it to self.residues
+                                residue = self.Chain.Residue(res_name, res_seq, i_code)
+                                # Check if the residue index is already assigned, if not assign it
+                                if residue.index is None:
+                                    # assign it next index value in the chain
+                                    residue.index = len(chain.residues)
+                                chain.residues.append(residue)
 
-                        # Check if the atom already exists in self.atoms
-                        atom_id = line[6:11].strip()
-                        atom_name = line[12:16].strip()
-                        alt_loc = line[16].strip()
-                        x = float(line[30:38].strip())
-                        y = float(line[38:46].strip())
-                        z = float(line[46:54].strip())
-                        occupancy = line[54:60].strip()
-                        temp_factor = line[60:66].strip()
-                        segment_id = line[72:76].strip()
-                        element = line[76:78].strip()
-                        charge = line[78:80].strip()
-                        atom = next((a for a in residue.atoms if a.atom_id == atom_id), None)
-                        if atom is None:
-                            # Create an Atom object and append it to self.atoms
-                            atom = self.Chain.Residue.Atom(atom_id, atom_name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge)
-                            residue.atoms.append(atom)
+                            # Check if the atom already exists in self.atoms
+                            atom_id = line[6:11].strip()
+                            atom_name = line[12:16].strip()
+                            alt_loc = line[16].strip()
+                            x = float(line[30:38].strip())
+                            y = float(line[38:46].strip())
+                            z = float(line[46:54].strip())
+                            occupancy = line[54:60].strip()
+                            temp_factor = line[60:66].strip()
+                            segment_id = line[72:76].strip()
+                            element = line[76:78].strip()
+                            charge = line[78:80].strip()
+                            atom = next((a for a in residue.atoms if a.atom_id == atom_id), None)
+                            if atom is None:
+                                # Create an Atom object and append it to self.atoms
+                                atom = self.Chain.Residue.Atom(atom_id, atom_name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge)
+                                residue.atoms.append(atom)
 
     def get_sequence_dict(self):
         """
