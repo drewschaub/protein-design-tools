@@ -161,32 +161,22 @@ def get_radgyr_alanine_helix(sequence_length, atom_type="backbone"):
     
     return radius_of_gyration
 
-def get_radgyr_ratio(structure, atom_type="backbone", chains=None, residue_numbers=None, residue_indices=None, residue_ids=None):
+def get_radgyr_ratio(structure, atom_type="backbone", chains=None):
 
     # If the user passed a string for chains, convert it to a list
     if isinstance(chains, str):
         chains = [chains]
 
     # Get the radius of gyration
-    structure_radius_of_gyration = get_radgyr(structure, atom_type=atom_type, chains=chains, residue_numbers=residue_numbers, residue_indices=residue_indices, residue_ids=residue_ids)
+    structure_radius_of_gyration = get_radgyr(structure, atom_type=atom_type, chains=chains)
 
-    # Get the length of the protein structure for the chains, residue numbers, residue indices, and residue IDs specified
+    # Get the sequence length of the protein for chains in the structure
     alanine_helix_length = 0
     for chain in structure.chains:
         if chains is not None and chain.chain_name not in chains:
             continue
         else:
-            for residue in chain.residues:
-                # Check if the list of residue numbers are in the list of chain.residues
-                if residue_numbers is not None and residue.res_seq not in residue_numbers:
-                    continue
-                else:
-                    alanine_helix_length += 1
-                # Check if the list of residue indices are in the list of chain.residues
-                if residue_indices is not None and residue.res_index not in residue_indices:
-                    continue
-                else:
-                    alanine_helix_length += 1
+            alanine_helix_length += len(chain.residues)
 
     alanine_radius_of_gyration = get_radgyr_alanine_helix(alanine_helix_length, atom_type=atom_type)
 
