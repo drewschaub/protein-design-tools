@@ -26,8 +26,8 @@ setup(
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
     ],
-    package_dir = {"": "src"},
-    packages=find_packages(where="src"),
+    packages=['protein_design_tools'],
+    package_dir={'protein_design_tools': 'protein_design_tools'},
     python_requires = ">=3.6",
     install_requires=['numpy'],  # List your project dependencies here
 )
