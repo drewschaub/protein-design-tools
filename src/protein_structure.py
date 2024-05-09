@@ -141,6 +141,22 @@ class ProteinStructure:
                             atom = self.Chain.Residue.Atom(atom_id, atom_name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge)
                             residue.atoms.append(atom)
 
+    def get_sequence(self):
+        """
+        Return the sequence of the protein structure as a dictionary of chains and sequences.
+
+        Returns:
+        dict: A dictionary of chains and sequences. The keys are the chain names and the values are the sequences.
+
+        """
+        sequences = {}
+        for chain in self.chains:
+            sequence = ""
+            for residue in chain.residues:
+                sequence += residue.res_name
+            sequences[chain.chain_name] = sequence
+        return sequences
+
 # Test the ProteinStructure class
 protein = ProteinStructure()
 protein.read_pdb("example.pdb", name="test")
