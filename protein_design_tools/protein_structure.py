@@ -141,7 +141,7 @@ class ProteinStructure:
                             atom = self.Chain.Residue.Atom(atom_id, atom_name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge)
                             residue.atoms.append(atom)
 
-    def get_sequence(self):
+    def get_sequence_dict(self):
         """
         Return the sequence of the protein structure as a dictionary of chains and sequences.
 
