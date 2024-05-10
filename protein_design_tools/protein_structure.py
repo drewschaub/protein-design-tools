@@ -138,7 +138,7 @@ class ProteinStructure:
                     self.charge = charge
 
                     # Calculate the mass of the atom
-                    self.mass = ATOMIC_WEIGHTS.get(element, 0.0)
+                    self.mass = ATOMIC_WEIGHTS[element]
     
     def read_pdb(self, file_path, chains=None, name=None):
         """
