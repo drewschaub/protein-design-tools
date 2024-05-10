@@ -47,7 +47,7 @@ class ProteinStructure:
         class Residue:
             """Represents a residue in a protein structure."""
             # Residue class will contain a list of Atom objects
-            def __init__(self, res_name, res_seq, i_code):
+            def __init__(self, name, res_seq, i_code):
                 """
                 Initialize a Residue object, which will contain a list of Atom objects.
                 
@@ -60,14 +60,14 @@ class ProteinStructure:
                 i_code : str
                     The insertion code of the residue.
                 """
-                self.res_name = res_name
+                self.name = name
                 self.res_seq = res_seq
                 self.i_code = i_code
 
                 # Unique identifiers for each residue
                 self.index = None
                 self.res_seq_i = f"{res_seq}{i_code}"
-                self.res_name_seq_i = f"{res_name}{res_seq}{i_code}"
+                self.res_name_seq_i = f"{name}{res_seq}{i_code}"
 
                 self.atoms = [] # list of Atom objects
 

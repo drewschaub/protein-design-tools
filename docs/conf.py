@@ -3,17 +3,17 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
-import sys
-sys.path.insert(0, os.path.abspath('..'))
-
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'protein-design-tools'
 copyright = '2024, Andrew Schaub'
 author = 'Andrew Schaub'
-release = '0.1.20'
+release = '0.1.21'
+
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../protein_design_tools/'))
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

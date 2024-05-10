@@ -1,3 +1,8 @@
+"""
+protein_structure_utils.py
+====================================
+The protein_structure_utils module contains functions for analyzing protein structures.
+"""
 import numpy as np
 from pathlib import Path
 
@@ -5,30 +10,33 @@ from pathlib import Path
 def get_coordinates(structure, atom_type="all", chains=None, residue_numbers=None, residue_indices=None, residue_ids=None):
     """
     Get the coordinates of atoms from a ProteinStructure object.
-
-    Parameters:
-    structure (ProteinStructure): The protein structure to get the coordinates from.
-    atom_type (str, optional): The type of atoms to get the coordinates from. Can be "all", "backbone", or "sidechain". Defaults to "all".
-    chains (list of str, optional): A list of chain names to get the coordinates from. If None, get the coordinates from all chains. Defaults to None.
-    residue_numbers (list of int, optional): A list of residue numbers to get the coordinates from. If None, get the coordinates from all residues. Defaults to None.
-    residue_indices (list of int, optional): A list of residue sequence indices to get the coordinates from. If None, get the coordinates from all residues. Defaults to None.
-    residue_ids (list of str, optional): A list of residue sequence identifiers to get the coordinates from. If None, get the coordinates from all residues. Defaults to None.
     
-    Returns:
-    list of list of float: A list of [x, y, z] coordinates of the selected atoms.
+    Parameters
+    ----------
+    structure : ProteinStructure
+        The protein structure to get the coordinates from.
+    atom_type : str, optional
+        The type of atoms to get the coordinates from. Can be "all", "backbone", or "sidechain". Defaults to "all".
+    chains : str or list of str, optional
+        A list of chain names to get the coordinates from, or a single chain as a string. If None, get the coordinates 
+        from all chains. Defaults to None.
+    residue_numbers : list of int, optional
+        A list of residue numbers to get the coordinates from. If None, get the coordinates from all residues. Defaults 
+        to None.
+    residue_indices : list of int, optional
+        A list of residue sequence indices to get the coordinates from. If None, get the coordinates from all residues. 
+        Defaults to None.
     """
-
     # If the user passed a string for chains, convert it to a list
     if isinstance(chains, str):
         chains = [chains]
 
-    # Initialize an empty list to store the coordinates
-    coordinates = []
+    coordinates = [] # Initialize an empty list to store the coordinates
     
     # Loop over all chains in the structure
     for chain in structure.chains:
         # Check if the chain is in the specified chains
-        if chains is not None and chain.chain_name not in chains:
+        if chains is not None and chain.name not in chains:
             continue
         
         # Loop over all residues in the chain
@@ -37,49 +45,51 @@ def get_coordinates(structure, atom_type="all", chains=None, residue_numbers=Non
             if residue_numbers is not None and residue.res_seq not in residue_numbers:
                 continue
             
-            # Loop over all atoms in the residue
+            # Loop over all atoms in the residue append the atom to the coordinates list depending on the atom type
             for atom in residue.atoms:
-                # Check if the atom type is in the specified atom types
-                if atom_type == "all" or atom.atom_name == atom_type:
-                    # Append the coordinates to the list
+                if atom_type == "all" or atom.name == atom_type:
                     coordinates.append([atom.x, atom.y, atom.z])
-                elif atom_type == "backbone" and atom.atom_name in ["N", "CA", "C", "O"]:
+                elif atom_type == "backbone" and atom.name in ["N", "CA", "C", "O"]:
                     coordinates.append([atom.x, atom.y, atom.z])
-                elif atom_type == "sidechain" and atom.atom_name not in ["N", "CA", "C", "O"]:
+                elif atom_type == "sidechain" and atom.name not in ["N", "CA", "C", "O"]:
                     coordinates.append([atom.x, atom.y, atom.z])
 
-    # Convert the list of coordinates to a numpy array
-    coordinates = np.array(coordinates)
+    coordinates = np.array(coordinates) # Convert the list of coordinates to a numpy array
     
     return coordinates
 
 def get_masses(structure, atom_type="all", chains=None, residue_numbers=None, residue_indices=None, residue_ids=None):
     """
     Get the masses of atoms from a ProteinStructure object.
-
-    Parameters:
-    structure (ProteinStructure): The protein structure to get the masses from.
-    atom_type (str, optional): The type of atoms to get the masses from. Can be "all", "backbone", or "sidechain". Defaults to "all".
-    chains (str or list of str, optional): A list of chain names to get the masses from, or a single chain as a string. If None, get the masses from all chains. Defaults to None.
-    residue_numbers (list of int, optional): A list of residue numbers to get the masses from. If None, get the masses from all residues. Defaults to None.
-    residue_indices (list of int, optional): A list of residue sequence indices to get the masses from. If None, get the masses from all residues. Defaults to None.
-    residue_ids (list of str, optional): A list of residue sequence identifiers to get the masses from. If None, get the masses from all residues. Defaults to None.
     
-    Returns:
-    list of float: A list of masses of the selected atoms.
+    Parameters
+    ----------
+    structure : ProteinStructure
+        The protein structure to get the masses from.
+    atom_type : str, optional
+        The type of atoms to get the masses from. Can be "all", "backbone", or "sidechain". Defaults to "all".
+    chains : str or list of str, optional
+        A list of chain names to get the masses from, or a single chain as a string. If None, get the masses from all 
+        chains. Defaults to None.
+    residue_numbers : list of int, optional
+        A list of residue numbers to get the masses from. If None, get the masses from all residues. Defaults to None.
+    residue_indices : list of int, optional
+        A list of residue sequence indices to get the masses from. If None, get the masses from all residues. Defaults 
+        to None.
+    residue_ids : list of str, optional
+        A list of residue sequence identifiers to get the masses from. If None, get the masses from all residues. 
+        Defaults to None.
     """
-
     # If the user passed a string for chains, convert it to a list
     if isinstance(chains, str):
         chains = [chains]
 
-    # Initialize an empty list to store the masses
-    masses = []
+    masses = [] # Initialize an empty list to store the masses
     
     # Loop over all chains in the structure
     for chain in structure.chains:
         # Check if the chain is in the specified chains
-        if chains is not None and chain.chain_name not in chains:
+        if chains is not None and chain.name not in chains:
             continue
         
         # Loop over all residues in the chain
@@ -88,19 +98,16 @@ def get_masses(structure, atom_type="all", chains=None, residue_numbers=None, re
             if residue_numbers is not None and residue.res_seq not in residue_numbers:
                 continue
             
-            # Loop over all atoms in the residue
+            # Loop over all atoms in the residue append the atom to the masses list depending on the atom type
             for atom in residue.atoms:
-                # Check if the atom type is in the specified atom types
-                if atom_type == "all" or atom.atom_name == atom_type:
-                    # Append the mass to the list
+                if atom_type == "all" or atom.name == atom_type:
                     masses.append(atom.mass)
-                elif atom_type == "backbone" and atom.atom_name in ["N", "CA", "C", "O"]:
+                elif atom_type == "backbone" and atom.name in ["N", "CA", "C", "O"]:
                     masses.append(atom.mass)
-                elif atom_type == "sidechain" and atom.atom_name not in ["N", "CA", "C", "O"]:
+                elif atom_type == "sidechain" and atom.name not in ["N", "CA", "C", "O"]:
                     masses.append(atom.mass)
 
     return masses
-
 
 def get_radgyr(structure, atom_type="backbone", chains=None, residue_numbers=None, residue_indices=None, residue_ids=None):
     """
@@ -141,14 +148,15 @@ def get_radgyr(structure, atom_type="backbone", chains=None, residue_numbers=Non
 # structure, atom_type="all", chains=None, residue_numbers=None, residue_indices=None, residue_ids=None):
 def get_radgyr_alanine_helix(sequence_length, atom_type="backbone"):
     """
-    Retrieve the radius of gyration of an ideal alanine helix.
-
-    Parameters:
-    sequence_length (int): The length of the alanine helix. The length should be between 11 and 200.
-    atom_type (str, optional): The type of atoms to calculate the radius of gyration for. Can be "all" or "backbone". Defaults to "backbone".
-
-    Returns:
-    float: The radius of gyration of the alanine helix.
+    Calculate the radius of gyration of an ideal alanine helix. The radius of gyration is calculated from a linear 
+    regression model performed on a dataset of ideal alanine helices of different lengths.
+    
+    Parameters
+    ----------
+    sequence_length : int
+        The length of the alanine helix.
+    atom_type : str, optional
+        The type of atoms to calculate the radius of gyration for. Can be "all" or "backbone". Defaults to "backbone".
     """
     if atom_type == "all":
         # values are from a linear regression of a dataset of ideal alanine helices of different lengths
@@ -162,6 +170,19 @@ def get_radgyr_alanine_helix(sequence_length, atom_type="backbone"):
     return radius_of_gyration
 
 def get_radgyr_ratio(structure, atom_type="backbone", chains=None):
+    """
+    Calculate the radius of gyration ratio of a protein structure to an ideal alanine helix of the same length.
+    
+    Parameters
+    ----------
+    structure : ProteinStructure
+        The protein structure to calculate the radius of gyration ratio for.
+    atom_type : str, optional
+        The type of atoms to calculate the radius of gyration for. Can be "all" or "backbone". Defaults to "backbone".
+    chains : list of str, optional
+        A list of chain names to calculate the radius of gyration for. If None, calculate the radius of gyration for 
+        all chains. Defaults to None.
+    """
 
     # If the user passed a string for chains, convert it to a list
     if isinstance(chains, str):
