@@ -94,6 +94,10 @@ class ProteinStructure:
         # Set the name of the protein structure
         self.name = name
 
+        # If the user passed a string for chains, convert it to a list
+        if isinstance(chains, str):
+            chains = [chains]
+
         # Parse PDB file and populate self.atoms
         p = Path(file_path)
         if p.suffix == ".pdb":

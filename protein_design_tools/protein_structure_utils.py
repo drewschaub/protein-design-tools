@@ -170,13 +170,14 @@ def get_radgyr_ratio(structure, atom_type="backbone", chains=None):
     # Get the radius of gyration
     structure_radius_of_gyration = get_radgyr(structure, atom_type=atom_type, chains=chains)
 
-    # Get the sequence length of the protein for chains in the structure
+    # get the sequence length of the protein
     alanine_helix_length = 0
-    for chain in structure.chains:
-        if chains is not None and chain.chain_name not in chains:
-            continue
+    sequence_dict = structure.get_sequence_dict()
+    for chain in sequence_dict.keys():
+        if chains is None or chain in chains:
+            alanine_helix_length += len(sequence_dict[chain])
         else:
-            alanine_helix_length += len(chain.residues)
+            continue
 
     alanine_radius_of_gyration = get_radgyr_alanine_helix(alanine_helix_length, atom_type=atom_type)
 
