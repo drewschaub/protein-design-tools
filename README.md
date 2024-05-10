@@ -16,7 +16,9 @@ pip install protein-design-tools
 ## Usage
 Provide some examples of how to use your package. For example:
 
-### Calculate the radius of gyration of a protein structure's backbone
+### Examples
+
+In the example below, we demonstrate how to calculate the radius of gyration for a protein. This can be useful when selecting proteins with a more spherical structure.
 
 ```python
 from protein_design_tools import protein_structure, protein_structure_utils
