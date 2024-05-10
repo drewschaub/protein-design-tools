@@ -1,7 +1,8 @@
+# Protein-Design Tools
+
 ![Banner](assets/banner.png)
 
-<br>
-<br>
+[![PyPI version](https://badge.fury.io/py/protein-design-tools.svg)](https://badge.fury.io/py/protein-design-tools)
 
 A library of tools for protein design.
 
