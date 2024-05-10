@@ -28,17 +28,14 @@ class ProteinStructure:
             """
             Represents a residue in a protein structure.
 
-            A residue is a specific monomer in the polymeric chain of a protein. Each residue 
-            consists of one or more atoms.
-
-            Attributes:
-            res_name (str): The name of the residue.
-            res_seq (str): The sequence number of the residue.
-            i_code (str): The insertion code of the residue.
-            index (int): The index of the residue in the chain.
-            res_seq_i (str): The unique identifier of the residue.
-            atoms (list of Atom): The atoms that make up the residue.
+            :param res_name: The name of the residue.
+            :type res_name: str
+            :param res_seq: The sequence number of the residue.
+            :type res_seq: str
+            :param i_code: The insertion code of the residue.
+            :type i_code: str
             """
+
             # Residue class will contain a list of Atom objects
             def __init__(self, res_name, res_seq, i_code):
                 # Residue objects will contain a list of Atom objects
@@ -59,20 +56,28 @@ class ProteinStructure:
                 """
                 Represents an atom in a protein structure.
 
-                An atom is a single particle of an element that makes up a residue in a protein structure.
-
-                Attributes:
-                atom_id (str): The unique identifier of the atom.
-                atom_name (str): The name of the atom.
-                alt_loc (str): The alternate location indicator.
-                x (float): The x-coordinate of the atom.
-                y (float): The y-coordinate of the atom.
-                z (float): The z-coordinate of the atom.
-                occupancy (str): The occupancy of the atom.
-                temp_factor (str): The temperature factor of the atom.
-                segment_id (str): The segment identifier of the atom.
-                element (str): The element of the atom.
-                charge (str): The charge of the atom.
+                :param atom_id: The atom ID.
+                :type atom_id: str
+                :param atom_name: The atom name.
+                :type atom_name: str
+                :param alt_loc: The alternate location indicator.
+                :type alt_loc: str
+                :param x: The x-coordinate of the atom.
+                :type x: float
+                :param y: The y-coordinate of the atom.
+                :type y: float
+                :param z: The z-coordinate of the atom.
+                :type z: float
+                :param occupancy: The occupancy of the atom.
+                :type occupancy: str
+                :param temp_factor: The temperature factor of the atom.
+                :type temp_factor: str
+                :param segment_id: The segment ID.
+                :type segment_id: str
+                :param element: The element of the atom.
+                :type element: str
+                :param charge: The charge of the atom.
+                :type charge: str
                 """
                 def __init__(self, atom_id, atom_name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge):
                     self.atom_id = atom_id
@@ -91,6 +96,16 @@ class ProteinStructure:
                     self.mass = ATOMIC_WEIGHTS.get(element, 0.0)
     
     def read_pdb(self, file_path, chains=None, name=None):
+        """
+        Read a PDB file and populate the ProteinStructure object.
+
+        :param file_path: The path to the PDB file.
+        :type file_path: str
+        :param chains: A list of chain names to read from the PDB file. If None, read all chains. Defaults to None.
+        :type chains: list of str, optional
+        :param name: The name of the protein structure. Defaults to None.
+        :type name: str, optional
+        """
         # Set the name of the protein structure
         self.name = name
 
@@ -149,9 +164,8 @@ class ProteinStructure:
         """
         Return the sequence of the protein structure as a dictionary of chains and sequences.
 
-        Returns:
-        dict: A dictionary of chains and sequences. The keys are the chain names and the values are the sequences.
-
+        :returns: A dictionary of chains and sequences. The keys are the chain names and the values are the sequences.
+        :rtype: dict
         """
         sequences = {}
         for chain in self.chains:

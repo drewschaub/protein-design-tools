@@ -10,6 +10,8 @@ Welcome to protein-design-tools's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   protein_structure
+   protein_structure_utils
 
 
 Indices and tables
