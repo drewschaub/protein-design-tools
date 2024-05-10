@@ -39,6 +39,45 @@ THREE_TO_ONE = {'ALA': 'A',
                 'VAL': 'V'
                 }
 
+ATOM_NAME_TO_ELEMENT = {'N': 'N',
+                        'CA': 'C',
+                        'C': 'C',
+                        'O': 'O',
+                        'CB': 'C',
+                        'CG': 'C',
+                        'CG1': 'C',
+                        'CG2': 'C',
+                        'CD': 'C',
+                        'CD1': 'C',
+                        'CD2': 'C',
+                        'CE': 'C',
+                        'CE1': 'C',
+                        'CE2': 'C',
+                        'CE3': 'C',
+                        'CZ': 'C',
+                        'CZ2': 'C',
+                        'CZ3': 'C',
+                        'CH2': 'C',
+                        'ND1': 'N',
+                        'ND2': 'N',
+                        'NE': 'N',
+                        'NE1': 'N',
+                        'NE2': 'N',
+                        'NH1': 'N',
+                        'NH2': 'N',
+                        'NZ': 'N',
+                        'SD': 'S',
+                        'SG': 'S',
+                        'OG': 'O',
+                        'OG1': 'O',
+                        'OD1': 'O',
+                        'OD2': 'O',
+                        'OE1': 'O',
+                        'OE2': 'O',
+                        'OH': 'O',
+                        'OXT': 'O',
+                        'H': 'H'}
+
 class ProteinStructure:
     """ProteinStruture represents a protein structure and its components."""
     def __init__(self, name=None):
@@ -142,7 +181,15 @@ class ProteinStructure:
     
     def read_pdb(self, file_path, chains=None, name=None):
         """
-        Read a PDB file and populate the ProteinStructure object with its contents.
+        Read a PDB file and populate the ProteinStructure object with its contents. Atom elements are obtained from the
+        atom name. 
+        
+        Note: The element is determined from columns 13-14 of the PDB file, so check that your PDB file is formatted
+        correctly. Specifically, hydrogen atoms can sometimes have weird names such as 'HE11', and this function would
+        incorrectly assign helium as the element. If you encounter this issue, you can manually set the element of the
+        atom after reading the PDB file. 
+        
+        Reference: https://cdn.rcsb.org/wwpdb/docs/documentation/file-format/PDB_format_1992.pdf
         
         Parameters
         ----------
@@ -190,6 +237,7 @@ class ProteinStructure:
 
                             # Check if the atom already exists in self.atoms
                             atom_id = int(line[6:11].strip())
+                            element = line[12:14].strip()
                             atom_name = line[12:16].strip()
                             alt_loc = line[16].strip()
                             x = float(line[30:38].strip())
@@ -197,9 +245,14 @@ class ProteinStructure:
                             z = float(line[46:54].strip())
                             occupancy = float(line[54:60].strip())
                             temp_factor = float(line[60:66].strip())
+                            
                             segment_id = line[72:76].strip()
-                            element = line[76:78].strip()
                             charge = line[78:80].strip()
+                            
+                                
+
+
+
                             atom = next((a for a in residue.atoms if a.atom_id == atom_id), None)
                             if atom is None:
                                 # Create an Atom object and append it to self.atoms
