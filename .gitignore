@@ -161,3 +161,6 @@ cython_debug/
 
 # PDB files
 *.pdb
+
+# From MacOS
+.DS_Store
