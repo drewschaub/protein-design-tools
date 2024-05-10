@@ -16,6 +16,29 @@ ATOMIC_WEIGHTS = {
     # Add the rest of the elements here
 }
 
+# Dictionary to convert three-letter amino acid codes to one-letter codes
+THREE_TO_ONE = {'ALA': 'A',
+                'ARG': 'R',
+                'ASN': 'N',
+                'ASP': 'D',
+                'CYS': 'C',
+                'GLN': 'Q',
+                'GLU': 'E',
+                'GLY': 'G',
+                'HIS': 'H',
+                'ILE': 'I',
+                'LEU': 'L',
+                'LYS': 'K',
+                'MET': 'M',
+                'PHE': 'F',
+                'PRO': 'P',
+                'SER': 'S',
+                'THR': 'T',
+                'TRP': 'W',
+                'TYR': 'Y',
+                'VAL': 'V'
+                }
+
 class ProteinStructure:
     """ProteinStruture represents a protein structure and its components."""
     def __init__(self, name=None):
@@ -194,6 +217,6 @@ class ProteinStructure:
         for chain in self.chains:
             sequence = ""
             for residue in chain.residues:
-                sequence += residue.name
+                sequence += THREE_TO_ONE[residue.name]
             sequences[chain.name] = sequence
         return sequences
