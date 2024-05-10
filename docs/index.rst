@@ -11,6 +11,7 @@ Welcome to Protein Design Tools's documentation!
    :caption: Contents:
 
    protein_structure
+   
    protein_structure_utils
 
 Indices and tables
