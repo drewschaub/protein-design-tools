@@ -1,3 +1,9 @@
+"""
+protein_structure.py
+====================================
+The protein_structure module contains the ProteinStructure class, which represents a protein structure and its 
+components.
+"""
 from pathlib import Path
 
 # Atomic weights from https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&ascii=ascii
@@ -11,77 +17,93 @@ ATOMIC_WEIGHTS = {
 }
 
 class ProteinStructure:
-    # Structure class will contain a list of chain objects
-    def __init__(self):
-        # Structure objects will contain a list of Chain objects
+    """ProteinStruture represents a protein structure and its components."""
+    def __init__(self, name=None):
+        """
+        Initialize a ProteinStructure object.
+
+        Parameters
+        ----------
+        name : str, optional
+            The name of the protein structure. Defaults to None.
+        """
         self.name = None
         self.chains = []
 
     class Chain:
-        # Chain class will contain a list of residue objects
-        def __init__(self, chain_name):
-            # Chain objects will contain a list of Residue objects
-            self.chain_name = chain_name
-            self.residues = []
+        """Chain represents a chain in a protein structure."""
+        def __init__(self, name):
+            """
+            Initialize a Chain object, which will contain a list of Residue objects.
+            
+            Parameters
+            ----------
+            name : str
+                chainID - chain identifier
+            """
+            self.name = name
+            self.residues = [] # list of Residue objects
 
         class Residue:
-            """
-            Represents a residue in a protein structure.
-
-            :param res_name: The name of the residue.
-            :type res_name: str
-            :param res_seq: The sequence number of the residue.
-            :type res_seq: str
-            :param i_code: The insertion code of the residue.
-            :type i_code: str
-            """
-
+            """Represents a residue in a protein structure."""
             # Residue class will contain a list of Atom objects
             def __init__(self, res_name, res_seq, i_code):
-                # Residue objects will contain a list of Atom objects
+                """
+                Initialize a Residue object, which will contain a list of Atom objects.
+                
+                Parameters
+                ----------
+                res_name : str
+                    The name of the residue.
+                res_seq : int
+                    The sequence number of the residue.
+                i_code : str
+                    The insertion code of the residue.
+                """
                 self.res_name = res_name
                 self.res_seq = res_seq
                 self.i_code = i_code
 
-                # assign a residue index to each residue
-                self.index = None                
-
-                # Unique identifier for each residue
+                # Unique identifiers for each residue
+                self.index = None
                 self.res_seq_i = f"{res_seq}{i_code}"
                 self.res_name_seq_i = f"{res_name}{res_seq}{i_code}"
 
-                self.atoms = []
+                self.atoms = [] # list of Atom objects
 
             class Atom:
-                """
-                Represents an atom in a protein structure.
-
-                :param atom_id: The atom ID.
-                :type atom_id: str
-                :param atom_name: The atom name.
-                :type atom_name: str
-                :param alt_loc: The alternate location indicator.
-                :type alt_loc: str
-                :param x: The x-coordinate of the atom.
-                :type x: float
-                :param y: The y-coordinate of the atom.
-                :type y: float
-                :param z: The z-coordinate of the atom.
-                :type z: float
-                :param occupancy: The occupancy of the atom.
-                :type occupancy: str
-                :param temp_factor: The temperature factor of the atom.
-                :type temp_factor: str
-                :param segment_id: The segment ID.
-                :type segment_id: str
-                :param element: The element of the atom.
-                :type element: str
-                :param charge: The charge of the atom.
-                :type charge: str
-                """
-                def __init__(self, atom_id, atom_name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge):
+                """Represents an atom in a protein structure."""
+                def __init__(self, atom_id, name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge):
+                    """
+                    Initialize an Atom object.
+                    
+                    Parameters
+                    ----------
+                    atom_id : int
+                        The atom serial number.
+                    name : str
+                        The atom  name.
+                    alt_loc : str
+                        The alternate location indicator.
+                    x : float
+                        The orthogonal coordinates for X in Angstroms.
+                    y : float
+                        The orthogonal coordinates for Y in Angstroms.
+                    z : float
+                        The orthogonal coordinates for Z in Angstroms.
+                    occupancy : float
+                        The occupancy of the atom.
+                    temp_factor : float
+                        The temperature factor of the atom.
+                    segment_id : str
+                        The segment ID.
+                    element : str
+                        The element symbol of the atom.
+                    charge : str
+                        The charge on the atom.
+                    """
                     self.atom_id = atom_id
-                    self.atom_name = atom_name
+                    self.name = name
                     self.alt_loc = alt_loc
                     self.x = x
                     self.y = y
@@ -97,17 +119,18 @@ class ProteinStructure:
     
     def read_pdb(self, file_path, chains=None, name=None):
         """
-        Read a PDB file and populate the ProteinStructure object.
-
-        :param file_path: The path to the PDB file.
-        :type file_path: str
-        :param chains: A list of chain names to read from the PDB file. If None, read all chains. Defaults to None.
-        :type chains: list of str, optional
-        :param name: The name of the protein structure. Defaults to None.
-        :type name: str, optional
+        Read a PDB file and populate the ProteinStructure object with its contents.
+        
+        Parameters
+        ----------
+        file_path : str
+            The path to the PDB file.
+        chains : str or list of str, optional
+            The chain(s) to read from the PDB file. If None, read all chains. Defaults to None.
+        name : str, optional
+            The name of the protein structure. Defaults to None.
         """
-        # Set the name of the protein structure
-        self.name = name
+        self.name = name # The name of the protein structure. Defaults to None.
 
         # If the user passed a string for chains, convert it to a list
         if isinstance(chains, str):
@@ -120,9 +143,9 @@ class ProteinStructure:
                 for line in f:
                     if line.startswith("ATOM"):
 
-                        # If chain is not in self.chains and chain is in chains list or chains is None append chain to self.chains 
                         chain_name = line[21].strip()
-                        chain = next((c for c in self.chains if c.chain_name == chain_name), None)
+                        # Check if the chain already exists in self.chains
+                        chain = next((c for c in self.chains if c.name == chain_name), None)
                         if chains is None or chain_name in chains:
                             if chain is None:
                                 chain = self.Chain(chain_name)
@@ -130,7 +153,7 @@ class ProteinStructure:
 
                             # Check if the residue already exists in self.residues
                             res_name = line[17:20].strip()
-                            res_seq = line[22:26].strip()
+                            res_seq = int(line[22:26].strip())
                             i_code = line[26].strip()
                             residue = next((r for r in chain.residues if r.res_seq == res_seq and r.i_code == i_code), None)
                             if residue is None:
@@ -143,14 +166,14 @@ class ProteinStructure:
                                 chain.residues.append(residue)
 
                             # Check if the atom already exists in self.atoms
-                            atom_id = line[6:11].strip()
+                            atom_id = int(line[6:11].strip())
                             atom_name = line[12:16].strip()
                             alt_loc = line[16].strip()
                             x = float(line[30:38].strip())
                             y = float(line[38:46].strip())
                             z = float(line[46:54].strip())
-                            occupancy = line[54:60].strip()
-                            temp_factor = line[60:66].strip()
+                            occupancy = float(line[54:60].strip())
+                            temp_factor = float(line[60:66].strip())
                             segment_id = line[72:76].strip()
                             element = line[76:78].strip()
                             charge = line[78:80].strip()
@@ -171,6 +194,6 @@ class ProteinStructure:
         for chain in self.chains:
             sequence = ""
             for residue in chain.residues:
-                sequence += residue.res_name
-            sequences[chain.chain_name] = sequence
+                sequence += residue.name
+            sequences[chain.name] = sequence
         return sequences
