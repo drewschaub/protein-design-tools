@@ -129,7 +129,9 @@ def get_radgyr(structure, atom_type="backbone", chains=None, residue_numbers=Non
     if isinstance(chains, str):
         chains = [chains]
 
-    # Get the coordinates of all atoms in the structure
+    # Get the coordinates of all atoms in the structure using the 
+
+
     coordinates = get_coordinates(structure, atom_type=atom_type, chains=chains, residue_numbers=residue_numbers, residue_indices=residue_indices, residue_ids=residue_ids)
     masses = get_masses(structure, atom_type=atom_type, chains=chains, residue_numbers=residue_numbers, residue_indices=residue_indices, residue_ids=residue_ids)
     

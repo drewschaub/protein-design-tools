@@ -5,6 +5,8 @@ The protein_structure module contains the ProteinStructure class, which represen
 components.
 """
 from pathlib import Path
+import h5py
+import numpy as np
 
 # Atomic weights from https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&ascii=ascii
 ATOMIC_WEIGHTS = {
@@ -248,10 +250,6 @@ class ProteinStructure:
                             
                             segment_id = line[72:76].strip()
                             charge = line[78:80].strip()
-                            
-                                
-
-
 
                             atom = next((a for a in residue.atoms if a.atom_id == atom_id), None)
                             if atom is None:
@@ -259,6 +257,28 @@ class ProteinStructure:
                                 atom = self.Chain.Residue.Atom(atom_id, atom_name, alt_loc, x, y, z, occupancy, temp_factor, segment_id, element, charge)
                                 residue.atoms.append(atom)
 
+    
+    def generate_coordinates(self):
+        """
+        Generate a dictionary of coordinates from the Structure object.
+
+        Returns
+        -------
+        dict
+            A dictionary of coordinates. The keys are the chain names and the values are the coordinate data.
+            Each coordinate is a 4-element array [x, y, z, b], where x, y, and z are the coordinates, and b is a binary
+            flag indicating whether the atom is a backbone atom (1) or not (0).
+        """
+        coordinates = {}
+        for chain in self.structure:
+            chain_coordinates = []
+            for residue in chain:
+                for atom in residue:
+                    is_backbone = 1 if atom.name in ['N', 'CA', 'C', 'O'] else 0
+                    chain_coordinates.append(np.append(atom.coord, is_backbone))
+            coordinates[chain.id] = np.array(chain_coordinates)
+        return coordinates 
+    
     def get_sequence_dict(self):
         """
         Return the sequence of the protein structure as a dictionary of chains and sequences.
@@ -273,3 +293,38 @@ class ProteinStructure:
                 sequence += THREE_TO_ONE[residue.name]
             sequences[chain.name] = sequence
         return sequences
+    
+    def write_coordinates_hdf5(file_path, coordinates):
+        """
+        Write coordinate data to an HDF5 file.
+
+        Parameters
+        ----------
+        file_path : str
+            The path to the HDF5 file.
+        coordinates : dict
+            A dictionary of coordinates. The keys are the chain names and the values are the coordinate data.
+        """
+        with h5py.File(file_path, 'w') as f:
+            for chain_name, chain_coordinates in coordinates.items():
+                f.create_dataset(chain_name, data=chain_coordinates)
+
+    def read_coordinates_hdf5(file_path):
+        """
+        Read coordinate data from an HDF5 file.
+
+        Parameters
+        ----------
+        file_path : str
+            The path to the HDF5 file.
+
+        Returns
+        -------
+        dict
+            A dictionary of coordinates. The keys are the chain names and the values are the coordinate data.
+        """
+        coordinates = {}
+        with h5py.File(file_path, 'r') as f:
+            for chain_name in f.keys():
+                coordinates[chain_name] = f[chain_name][:]
+        return coordinates
