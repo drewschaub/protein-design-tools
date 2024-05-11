@@ -15,7 +15,11 @@ pip install protein-design-tools
 ```
 
 ## Usage
-Provide some examples of how to use your package. For example:
+
+This package provides tools for protein design projects, including handling and manipulating metadata associated with
+those types of projects. 
+
+Some examples of how to use this package. For example:
 
 ### Examples
 
