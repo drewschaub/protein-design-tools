@@ -251,6 +251,10 @@ class ProteinStructure:
                             segment_id = line[72:76].strip()
                             charge = line[78:80].strip()
 
+                            # remove digits from element
+                            if element in ['1H', '2H', '3H']:
+                                element = 'H'
+
                             atom = next((a for a in residue.atoms if a.atom_id == atom_id), None)
                             if atom is None:
                                 # Create an Atom object and append it to self.atoms

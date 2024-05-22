@@ -9,7 +9,7 @@
 project = 'protein-design-tools'
 copyright = '2024, Andrew Schaub'
 author = 'Andrew Schaub'
-release = '0.1.21'
+release = '0.1.28'
 
 import os
 import sys

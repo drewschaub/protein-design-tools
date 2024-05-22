@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='protein-design-tools',
-    version='0.1.26',
+    version='0.1.28',
     author='Andrew Schaub',
     author_email='andrew.schaub@protonmail.com',
     description='A library of tools for protein design.',
@@ -20,5 +20,5 @@ setup(
     packages=['protein_design_tools'],
     package_dir={'protein_design_tools': 'protein_design_tools'},
     python_requires = ">=3.6",
-    install_requires=['numpy'],  # List your project dependencies here
+    install_requires=['numpy', 'h5py'],  # List your project dependencies here
 )
