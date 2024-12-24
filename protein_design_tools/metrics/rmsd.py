@@ -4,6 +4,7 @@ import torch
 import jax.numpy as jnp
 from jax import jit
 
+
 @jit
 def compute_rmsd_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
     """
@@ -22,7 +23,8 @@ def compute_rmsd_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
         RMSD between P and Q
     """
     assert P.shape == Q.shape
-    return jnp.sqrt(jnp.mean(jnp.sum((P - Q)**2, axis=1)))
+    return jnp.sqrt(jnp.mean(jnp.sum((P - Q) ** 2, axis=1)))
+
 
 def compute_rmsd_numpy(P: np.ndarray, Q: np.ndarray) -> float:
     """
@@ -41,7 +43,8 @@ def compute_rmsd_numpy(P: np.ndarray, Q: np.ndarray) -> float:
         RMSD between P and Q
     """
     assert P.shape == Q.shape
-    return np.sqrt(np.mean(np.sum((P - Q)**2, axis=1)))
+    return np.sqrt(np.mean(np.sum((P - Q) ** 2, axis=1)))
+
 
 def compute_rmsd_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     """
@@ -60,7 +63,8 @@ def compute_rmsd_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
         RMSD between P and Q
     """
     assert P.shape == Q.shape
-    return torch.sqrt(torch.mean(torch.sum((P - Q)**2, dim=1)))
+    return torch.sqrt(torch.mean(torch.sum((P - Q) ** 2, dim=1)))
+
 
 def compute_rmsd_tensorflow(P: tf.Tensor, Q: tf.Tensor) -> tf.Tensor:
     """
@@ -79,4 +83,4 @@ def compute_rmsd_tensorflow(P: tf.Tensor, Q: tf.Tensor) -> tf.Tensor:
         RMSD between P and Q
     """
     assert P.shape == Q.shape
-    return tf.sqrt(tf.reduce_mean(tf.reduce_sum((P - Q)**2, axis=1)))
+    return tf.sqrt(tf.reduce_mean(tf.reduce_sum((P - Q) ** 2, axis=1)))

@@ -5,16 +5,33 @@ from typing import List, Optional
 from .atom import Atom
 
 THREE_TO_ONE = {
-    'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D',
-    'CYS': 'C', 'GLN': 'Q', 'GLU': 'E', 'GLY': 'G',
-    'HIS': 'H', 'ILE': 'I', 'LEU': 'L', 'LYS': 'K',
-    'MET': 'M', 'PHE': 'F', 'PRO': 'P', 'SER': 'S',
-    'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'
+    "ALA": "A",
+    "ARG": "R",
+    "ASN": "N",
+    "ASP": "D",
+    "CYS": "C",
+    "GLN": "Q",
+    "GLU": "E",
+    "GLY": "G",
+    "HIS": "H",
+    "ILE": "I",
+    "LEU": "L",
+    "LYS": "K",
+    "MET": "M",
+    "PHE": "F",
+    "PRO": "P",
+    "SER": "S",
+    "THR": "T",
+    "TRP": "W",
+    "TYR": "Y",
+    "VAL": "V",
 }
+
 
 @dataclass
 class Residue:
     """Represents a residue in a protein structure."""
+
     name: str
     res_seq: int
     i_code: str

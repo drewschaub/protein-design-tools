@@ -4,8 +4,11 @@ import torch
 import jax.numpy as jnp
 from jax import jit
 
+
 @jit
-def compute_gdt_jax(P: jnp.ndarray, Q: jnp.ndarray, thresholds=[1, 2, 4, 8]) -> jnp.ndarray:
+def compute_gdt_jax(
+    P: jnp.ndarray, Q: jnp.ndarray, thresholds=[1, 2, 4, 8]
+) -> jnp.ndarray:
     """
     Compute GDT-TS between two NxD JAX arrays using JIT compilation.
 
@@ -33,6 +36,7 @@ def compute_gdt_jax(P: jnp.ndarray, Q: jnp.ndarray, thresholds=[1, 2, 4, 8]) -> 
         percentages.append(percentage)
     gdt_ts = jnp.mean(jnp.array(percentages))
     return gdt_ts
+
 
 def compute_gdt_numpy(P: np.ndarray, Q: np.ndarray, thresholds=[1, 2, 4, 8]) -> float:
     """
@@ -62,7 +66,10 @@ def compute_gdt_numpy(P: np.ndarray, Q: np.ndarray, thresholds=[1, 2, 4, 8]) -> 
     gdt_ts = np.mean(percentages)
     return gdt_ts
 
-def compute_gdt_pytorch(P: torch.Tensor, Q: torch.Tensor, thresholds=[1, 2, 4, 8]) -> torch.Tensor:
+
+def compute_gdt_pytorch(
+    P: torch.Tensor, Q: torch.Tensor, thresholds=[1, 2, 4, 8]
+) -> torch.Tensor:
     """
     Compute GDT-TS between two NxD PyTorch tensors.
 
@@ -90,7 +97,10 @@ def compute_gdt_pytorch(P: torch.Tensor, Q: torch.Tensor, thresholds=[1, 2, 4, 8
     gdt_ts = torch.mean(torch.stack(percentages))
     return gdt_ts
 
-def compute_gdt_tensorflow(P: tf.Tensor, Q: tf.Tensor, thresholds=[1, 2, 4, 8]) -> tf.Tensor:
+
+def compute_gdt_tensorflow(
+    P: tf.Tensor, Q: tf.Tensor, thresholds=[1, 2, 4, 8]
+) -> tf.Tensor:
     """
     Compute GDT-TS between two NxD TensorFlow tensors.
 

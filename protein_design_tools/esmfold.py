@@ -6,9 +6,10 @@ from pathlib import Path
 import torch, gc
 import sys
 
+
 def convert_outputs_to_pdb(outputs):
     """
-        take esm outputs and return an actual PDB file
+    take esm outputs and return an actual PDB file
     """
     final_atom_positions = atom14_to_atom37(outputs["positions"][-1], outputs)
     outputs = {k: v.to("cpu").detach().numpy() for k, v in outputs.items()}
@@ -31,7 +32,14 @@ def convert_outputs_to_pdb(outputs):
         pdbs.append(to_pdb(pred))
     return pdbs
 
-def esmfold(seq_output_df, model_name="facebook/esmfold_v1", num_recycles=5, device="cuda", gpu="A100"):
+
+def esmfold(
+    seq_output_df,
+    model_name="facebook/esmfold_v1",
+    num_recycles=5,
+    device="cuda",
+    gpu="A100",
+):
     """
     Fold protein sequences using the ESMFold model and save the predicted structures.
 
@@ -46,7 +54,7 @@ def esmfold(seq_output_df, model_name="facebook/esmfold_v1", num_recycles=5, dev
         None
     """
 
-    # Load the model 
+    # Load the model
     if device == "cuda":
         # House-keeping to free up memory
         gc.collect()
@@ -83,7 +91,9 @@ def esmfold(seq_output_df, model_name="facebook/esmfold_v1", num_recycles=5, dev
             continue
         else:
             try:
-                tokenized_input = tokenizer([sequence], return_tensors="pt", add_special_tokens=False)['input_ids']
+                tokenized_input = tokenizer(
+                    [sequence], return_tensors="pt", add_special_tokens=False
+                )["input_ids"]
                 tokenized_input = tokenized_input.cuda()
                 with torch.no_grad():
                     output = model(tokenized_input, num_recycles=5)
@@ -106,7 +116,9 @@ def esmfold(seq_output_df, model_name="facebook/esmfold_v1", num_recycles=5, dev
 
                 tokenizer = AutoTokenizer.from_pretrained(model_name)
                 try:
-                    tokenized_input = tokenizer([sequence], return_tensors="pt", add_special_tokens=False)['input_ids']
+                    tokenized_input = tokenizer(
+                        [sequence], return_tensors="pt", add_special_tokens=False
+                    )["input_ids"]
                     tokenized_input = tokenized_input.cuda()
                     with torch.no_grad():
                         output = model(tokenized_input, num_recycles)
