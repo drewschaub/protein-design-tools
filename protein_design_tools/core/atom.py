@@ -1,9 +1,9 @@
 # protein_design_tools/core/atom.py
 
 from dataclasses import dataclass
-from typing import Optional
 
-# Atomic weights from https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&ascii=ascii
+# Atomic weights from:
+# https://physics.nist.gov/cgi-bin/Compositions/stand_alone.pl?ele=&ascii=ascii
 ATOMIC_WEIGHTS = {
     "H": 1.00794075405578,
     "C": 12.0107358967352,
