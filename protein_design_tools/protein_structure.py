@@ -3,6 +3,10 @@ protein_structure.py
 ====================================
 The protein_structure module contains the ProteinStructure class, which represents a protein structure and its 
 components.
+
+Author:     Andrew Schaub
+Email:      andrew.schaub@protonmail.com
+License:    MIT License
 """
 from pathlib import Path
 import h5py
