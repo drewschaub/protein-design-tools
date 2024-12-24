@@ -73,6 +73,36 @@ pip install protein-design-tools
 ```
 *Note: Ensure that you have Python 3.7 or higher installed.*
 
+### Core Dependencies
+
+Install the core dependencies using `pip`:
+
+```bash
+pip install -e .
+```
+
+### Optional Dependencies
+
+Depending on your hardware, install the appropriate version of `jax`
+
+- CPU-only (Linux/macOS/Windows):
+
+```
+pip install -e .[jax_cpu]
+```
+
+- GPU Example:  (NVIDIA, CUDA 12):
+
+```
+pip install -e .[jax_cuda12]
+```
+
+- TPU (Google Cloud TPU VM):
+
+```
+pip install -e .[jax_tpu]
+```
+
 ## Quick Start
 
 Here's a quick example to get you started with Protein-Design Tools:

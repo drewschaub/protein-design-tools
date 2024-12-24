@@ -27,4 +27,10 @@ setup(
         'sphinx_rtd_theme',
         # Add other dependencies here
     ],
+    extras_require={
+        'jax_cpu': ['jax[cpu]',],
+        'jax_cuda12': ['jax[cuda12]',],
+        'jax_tpu': ['jax[tpu]',],
+    },
+    
 )
