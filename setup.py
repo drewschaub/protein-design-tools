@@ -21,5 +21,10 @@ setup(
     ],
     package_dir={'protein_design_tools': 'protein_design_tools'},
     python_requires = ">=3.6",
-    install_requires=['numpy', 'h5py'],  # List your project dependencies here
+    install_requires=[
+        'numpy',
+        'h5py',
+        'sphinx_rtd_theme',
+        # Add other dependencies here
+    ],
 )
