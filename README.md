@@ -62,7 +62,7 @@ Calculate structural metrics across multiple computational frameworks for flexib
 
 ### **Extensible Architecture**
 - **Modular Design**: Easily add new metrics, file formats, and functionalities without disrupting existing components.
-- **Multiple Frameworks**: Leverage the strengths of NumPy, PyTorch, TensorFlow, and JAX for computational tasks.
+- **Multiple Frameworks**: Leverage the strengths of NumPy, PyTorch, and JAX for computational tasks.
 
 ## Installation
 
