@@ -128,7 +128,7 @@ masses = get_masses(protein, atom_type="non-hydrogen")
 ```
 
 Several structural metrics are available, which are accessible across multiple computational frameworks
-```
+```python
 from protein_design_tools.metrics import compute_rmsd_numpy, compute_gdt_pytorch
 # Computing RMSD using NumPy
 import numpy as np
