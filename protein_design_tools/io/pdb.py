@@ -8,14 +8,14 @@ from ..core.chain import Chain
 from ..core.residue import Residue
 from ..core.atom import Atom
 import requests
-from io import StringIO
 
 
-def fetch_pdb(pdb_id: str,
-              file_path: Optional[str] = None,
-              chains: Optional[List[str]] = None,
-              name: Optional[str] = None
-              ) -> ProteinStructure:
+def fetch_pdb(
+    pdb_id: str,
+    file_path: Optional[str] = None,
+    chains: Optional[List[str]] = None,
+    name: Optional[str] = None,
+) -> ProteinStructure:
     """
     Fetch a PDB file from RCSB PDB by its ID and optionally save it to a file.
 
@@ -48,10 +48,9 @@ def fetch_pdb(pdb_id: str,
         )
 
 
-def read_pdb(file_path: str,
-             chains: Optional[List[str]] = None,
-             name: Optional[str] = None
-             ) -> ProteinStructure:
+def read_pdb(
+    file_path: str, chains: Optional[List[str]] = None, name: Optional[str] = None
+) -> ProteinStructure:
     """
     Read a PDB file (plain or gzipped) and return a ProteinStructure object.
 
@@ -69,7 +68,6 @@ def read_pdb(file_path: str,
     ProteinStructure
         The parsed protein structure.
     """
-    structure = ProteinStructure(name=name)
     p = Path(file_path)
 
     if not p.suffix.lower() in [".pdb", ".gz"]:
@@ -85,10 +83,9 @@ def read_pdb(file_path: str,
     return parse_pdb_content(content, chains, name)
 
 
-def parse_pdb_content(content: List[str],
-                      chains: Optional[List[str]],
-                      name: Optional[str]
-                      ) -> ProteinStructure:
+def parse_pdb_content(
+    content: List[str], chains: Optional[List[str]] = None, name: Optional[str] = None
+) -> ProteinStructure:
     """
     Parse PDB content and return a ProteinStructure object.
 
