@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+import tensorflow.experimental.numpy as tnp
 import torch
 import jax.numpy as jnp
 from jax import jit
@@ -81,26 +81,26 @@ def compute_tm_score_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     return tm_score
 
 
-def compute_tm_score_tensorflow(P: tf.Tensor, Q: tf.Tensor) -> tf.Tensor:
+def compute_tm_score_tensorflow(P: tnp.ndarray, Q: tnp.ndarray) -> tnp.ndarray:
     """
-    Compute TM-score between two NxD TensorFlow tensors.
+    Compute TM-score between two NxD TensorFlow tensors using tf.experimental.numpy.
 
     Parameters
     ----------
-    P : tf.Tensor
+    P : tnp.ndarray
         Mobile points, shape (N, D)
-    Q : tf.Tensor
+    Q : tnp.ndarray
         Target points, shape (N, D)
 
     Returns
     -------
-    tf.Tensor
+    tnp.ndarray
         TM-score between P and Q
     """
-    L_ref = tf.cast(tf.shape(P)[0], P.dtype)
-    d0 = 1.24 * tf.pow(L_ref - 15.0, 1 / 3) - 1.8
-    d0 = tf.maximum(d0, 1.0)  # Ensure d0 is positive
-    distances = tf.norm(P - Q, axis=1)
-    tm_scores = 1.0 / (1.0 + tf.square(distances / d0))
-    tm_score = tf.reduce_sum(tm_scores) / L_ref
+    L_ref = tnp.array(P.shape[0], dtype=P.dtype)
+    d0 = 1.24 * tnp.power(L_ref - 15.0, 1 / 3) - 1.8
+    d0 = tnp.maximum(d0, 1.0)  # Ensure d0 is positive
+    distances = tnp.linalg.norm(P - Q, axis=1)
+    tm_scores = 1.0 / (1.0 + (distances / d0) ** 2)
+    tm_score = tnp.sum(tm_scores) / L_ref
     return tm_score

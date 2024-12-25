@@ -123,3 +123,24 @@ def read_pdb(
                 residue.atoms.append(atom)
 
     return structure
+
+def write_pdb(structure: ProteinStructure, file_path: str) -> None:
+    """
+    Write a ProteinStructure object to a PDB file.
+
+    Parameters
+    ----------
+    structure : ProteinStructure
+        The protein structure to write.
+    file_path : str
+        The path to write the PDB file.
+    """
+    content = ""
+    with open(file_path, "w") as f:
+        for chain in structure.chains:
+            for residue in chain.residues:
+                for atom in residue.atoms:
+                    content += f"ATOM  {atom.atom_id:5} {atom.name:<4} {residue.name:<3} {chain.name}{residue.res_seq:4}{residue.i_code:<1}   {atom.x:8.3f}{atom.y:8.3f}{atom.z:8.3f}{atom.occupancy:6.2f}{atom.temp_factor:6.2f}          {atom.element:2}{atom.charge:2}\n"
+            content += "TER\n"
+        content += "END\n"
+        f.write(content)
