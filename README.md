@@ -173,7 +173,7 @@ for chain_id, sequence in sequence_dict.items():
     print(f"Chain {chain_id}: {sequence}")
 ```
 
-### Computing STructural Metrics
+### Computing Structural Metrics
 
 Leverage multiple frameworks to compute various structural metrics.
 
