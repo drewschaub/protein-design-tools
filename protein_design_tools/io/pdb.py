@@ -9,6 +9,7 @@ from ..core.atom import Atom
 import requests
 from io import StringIO
 
+
 def fetch_pdb(pdb_id: str, file_path: Optional[str] = None) -> ProteinStructure:
     """
     Fetch a PDB file from RCSB PDB by its ID and optionally save it to a file.
@@ -37,7 +38,10 @@ def fetch_pdb(pdb_id: str, file_path: Optional[str] = None) -> ProteinStructure:
             temp_path = StringIO(response.text)
             return read_pdb(temp_path)
     else:
-        raise ValueError(f"Failed to fetch PDB ID {pdb_id}: HTTP status {response.status_code}")
+        raise ValueError(
+            f"Failed to fetch PDB ID {pdb_id}: HTTP status {response.status_code}"
+        )
+
 
 def read_pdb(
     file_path: str, chains: Optional[List[str]] = None, name: Optional[str] = None
@@ -124,6 +128,7 @@ def read_pdb(
 
     return structure
 
+
 def write_pdb(structure: ProteinStructure, file_path: str) -> None:
     """
     Write a ProteinStructure object to a PDB file.
@@ -140,7 +145,13 @@ def write_pdb(structure: ProteinStructure, file_path: str) -> None:
         for chain in structure.chains:
             for residue in chain.residues:
                 for atom in residue.atoms:
-                    content += f"ATOM  {atom.atom_id:5} {atom.name:<4} {residue.name:<3} {chain.name}{residue.res_seq:4}{residue.i_code:<1}   {atom.x:8.3f}{atom.y:8.3f}{atom.z:8.3f}{atom.occupancy:6.2f}{atom.temp_factor:6.2f}          {atom.element:2}{atom.charge:2}\n"
+                    content += (
+                        f"ATOM  {atom.atom_id:5} {atom.name:<4} {residue.name:<3} "
+                        f"{chain.name}{residue.res_seq:4}{residue.i_code:<1}   "
+                        f"{atom.x:8.3f}{atom.y:8.3f}{atom.z:8.3f}"
+                        f"{atom.occupancy:6.2f}{atom.temp_factor:6.2f}          "
+                        f"{atom.element:2}{atom.charge:2}\n"
+                    )
             content += "TER\n"
         content += "END\n"
         f.write(content)

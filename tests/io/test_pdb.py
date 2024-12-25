@@ -8,6 +8,7 @@ from protein_design_tools.core.chain import Chain
 from protein_design_tools.core.residue import Residue
 from protein_design_tools.core.atom import Atom
 
+
 @pytest.fixture
 def sample_pdb_content():
     """from a previous AF2 test"""
@@ -216,20 +217,23 @@ END
 
 def test_read_pdb_with_hetatm(sample_pdb_content):
     mock_file = mock_open(read_data=sample_pdb_content)
-    
+
     with patch("builtins.open", mock_file):
-        structure = read_pdb("dummy_path.pdb", chains=['A'], name="TestProteinWithHETATM")
-    
+        structure = read_pdb(
+            "dummy_path.pdb", chains=["A"], name="TestProteinWithHETATM"
+        )
+
     # Assertions for HETATM record
     chain = structure.chains[0]
     residue2 = chain.residues[1]
     assert len(residue2.atoms) == 6  # Including OXT from HETATM
-    hetatm_atom = next((atom for atom in residue2.atoms if atom.name == 'OXT'), None)
+    hetatm_atom = next((atom for atom in residue2.atoms if atom.name == "OXT"), None)
     assert hetatm_atom is not None
-    assert hetatm_atom.element == 'O'
+    assert hetatm_atom.element == "O"
     assert hetatm_atom.x == 15.604
     assert hetatm_atom.y == 15.707
     assert hetatm_atom.z == 6.000
+
 
 def test_read_pdb_multiple_chains():
     multi_chain_pdb_content = """
@@ -247,26 +251,28 @@ HETATM   11  OXT ARG B   1      15.604  15.707   6.000  1.00 20.00           O
 END
 """
     mock_file = mock_open(read_data=multi_chain_pdb_content)
-    
+
     with patch("builtins.open", mock_file):
-        structure = read_pdb("dummy_path.pdb", chains=['A', 'B'], name="MultiChainProtein")
-    
+        structure = read_pdb(
+            "dummy_path.pdb", chains=["A", "B"], name="MultiChainProtein"
+        )
+
     # Assertions
     assert len(structure.chains) == 2
-    chain_a = next((c for c in structure.chains if c.name == 'A'), None)
-    chain_b = next((c for c in structure.chains if c.name == 'B'), None)
-    
+    chain_a = next((c for c in structure.chains if c.name == "A"), None)
+    chain_b = next((c for c in structure.chains if c.name == "B"), None)
+
     assert chain_a is not None
     assert chain_b is not None
-    
+
     assert len(chain_a.residues) == 1
     assert len(chain_b.residues) == 1
-    
+
     # Check residues and atoms
     residue_a = chain_a.residues[0]
-    assert residue_a.name == 'ALA'
+    assert residue_a.name == "ALA"
     assert len(residue_a.atoms) == 5
-    
+
     residue_b = chain_b.residues[0]
-    assert residue_b.name == 'ARG'
+    assert residue_b.name == "ARG"
     assert len(residue_b.atoms) == 6  # Including OXT
