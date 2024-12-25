@@ -1,5 +1,4 @@
 import numpy as np
-import tensorflow.experimental.numpy as tnp
 import torch
 import jax.numpy as jnp
 from jax import jit
