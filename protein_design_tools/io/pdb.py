@@ -7,7 +7,10 @@ from ..core.chain import Chain
 from ..core.residue import Residue
 from ..core.atom import Atom
 
-def read_pdb(file_path: str, chains: Optional[List[str]] = None, name: Optional[str] = None) -> ProteinStructure:
+
+def read_pdb(
+    file_path: str, chains: Optional[List[str]] = None, name: Optional[str] = None
+) -> ProteinStructure:
     """
     Read a PDB file and return a ProteinStructure object.
 
@@ -60,7 +63,14 @@ def read_pdb(file_path: str, chains: Optional[List[str]] = None, name: Optional[
                     structure.chains.append(chain)
 
                 # Find or create the residue
-                residue = next((r for r in chain.residues if r.res_seq == res_seq and r.i_code == i_code), None)
+                residue = next(
+                    (
+                        r
+                        for r in chain.residues
+                        if r.res_seq == res_seq and r.i_code == i_code
+                    ),
+                    None,
+                )
                 if not residue:
                     residue = Residue(name=res_name, res_seq=res_seq, i_code=i_code)
                     chain.residues.append(residue)
@@ -77,7 +87,7 @@ def read_pdb(file_path: str, chains: Optional[List[str]] = None, name: Optional[
                     temp_factor=temp_factor,
                     segment_id=segment_id,
                     element=element,
-                    charge=charge
+                    charge=charge,
                 )
                 residue.atoms.append(atom)
 

@@ -2,19 +2,24 @@
 
 from typing import Union, List, Dict
 
-def parse_residue_selection(selection: Union[Dict[str, List[Union[int, range]]], None]) -> Dict[str, List[int]]:
+
+def parse_residue_selection(
+    selection: Union[Dict[str, List[Union[int, range]]], None]
+) -> Dict[str, List[int]]:
     """
     Parse residue selection input into a standardized dictionary.
 
     Parameters
     ----------
     selection : dict or None
-        Residue selection, e.g., {'A': [1, 2, 3, 50, 60], 'B': [range(1, 21), 50, 60]} or None.
+        Residue selection, e.g.,
+        {'A': [1, 2, 3, 50, 60], 'B': [range(1, 21), 50, 60]} or None.
 
     Returns
     -------
     dict
-        Parsed residue selection with chain IDs as keys and lists of residue numbers as values.
+        Parsed residue selection with chain IDs as keys and lists of residue numbers as
+        values.
     """
     if selection is None:
         return {}

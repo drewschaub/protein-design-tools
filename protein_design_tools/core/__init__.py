@@ -5,4 +5,4 @@ from .residue import Residue
 from .chain import Chain
 from .protein_structure import ProteinStructure
 
-__all__ = ['Atom', 'Residue', 'Chain', 'ProteinStructure']
+__all__ = ["Atom", "Residue", "Chain", "ProteinStructure"]
