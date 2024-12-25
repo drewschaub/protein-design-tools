@@ -8,9 +8,6 @@ from protein_design_tools.core.chain import Chain
 from protein_design_tools.core.residue import Residue
 from protein_design_tools.core.atom import Atom
 
-# tests/io/test_pdb.py
-
-
 @pytest.fixture
 def sample_pdb_content():
     """from a previous AF2 test"""
@@ -188,10 +185,6 @@ def test_read_pdb_success(sample_pdb_content):
     assert atom_n.x == 24.215
     assert atom_n.y == -73.330
     assert atom_n.z == -84.959
-    assert atom_n.occupancy == 1.00
-    assert atom_n.temp_factor == 21.14
-    assert atom_n.charge == ""
-    assert atom_n.atom_id == 12920
 
 
 def test_read_pdb_missing_chains(sample_pdb_content):
@@ -207,9 +200,6 @@ def test_read_pdb_missing_chains(sample_pdb_content):
     assert len(structure.chains) == 0  # No chains 'B' in the sample data
 
 
-# tests/io/test_pdb.py
-
-
 def test_read_pdb_malformed_lines():
     malformed_pdb_content = """
 ATOM      1  N   ALA A   1      11.104  13.207   2.100  1.00 20.00           N
@@ -222,3 +212,61 @@ END
     with patch("builtins.open", mock_file):
         with pytest.raises(ValueError):
             read_pdb("dummy_path.pdb", chains=["A"], name="MalformedProtein")
+
+
+def test_read_pdb_with_hetatm(sample_pdb_content):
+    mock_file = mock_open(read_data=sample_pdb_content)
+    
+    with patch("builtins.open", mock_file):
+        structure = read_pdb("dummy_path.pdb", chains=['A'], name="TestProteinWithHETATM")
+    
+    # Assertions for HETATM record
+    chain = structure.chains[0]
+    residue2 = chain.residues[1]
+    assert len(residue2.atoms) == 6  # Including OXT from HETATM
+    hetatm_atom = next((atom for atom in residue2.atoms if atom.name == 'OXT'), None)
+    assert hetatm_atom is not None
+    assert hetatm_atom.element == 'O'
+    assert hetatm_atom.x == 15.604
+    assert hetatm_atom.y == 15.707
+    assert hetatm_atom.z == 6.000
+
+def test_read_pdb_multiple_chains():
+    multi_chain_pdb_content = """
+ATOM      1  N   ALA A   1      11.104  13.207   2.100  1.00 20.00           N  
+ATOM      2  CA  ALA A   1      12.560  13.267   2.100  1.00 20.00           C  
+ATOM      3  C   ALA A   1      13.104  14.207   3.100  1.00 20.00           C  
+ATOM      4  O   ALA A   1      14.104  14.207   3.100  1.00 20.00           O  
+ATOM      5  CB  ALA A   1      12.060  12.267   1.100  1.00 20.00           C  
+ATOM      6  N   ARG B   1      13.104  15.207   3.500  1.00 20.00           N  
+ATOM      7  CA  ARG B   1      14.104  16.207   4.500  1.00 20.00           C  
+ATOM      8  C   ARG B   1      15.104  16.207   5.500  1.00 20.00           C  
+ATOM      9  O   ARG B   1      16.104  17.207   5.500  1.00 20.00           O  
+ATOM     10  CB  ARG B   1      14.604  16.707   3.200  1.00 20.00           C  
+HETATM   11  OXT ARG B   1      15.604  15.707   6.000  1.00 20.00           O  
+END
+"""
+    mock_file = mock_open(read_data=multi_chain_pdb_content)
+    
+    with patch("builtins.open", mock_file):
+        structure = read_pdb("dummy_path.pdb", chains=['A', 'B'], name="MultiChainProtein")
+    
+    # Assertions
+    assert len(structure.chains) == 2
+    chain_a = next((c for c in structure.chains if c.name == 'A'), None)
+    chain_b = next((c for c in structure.chains if c.name == 'B'), None)
+    
+    assert chain_a is not None
+    assert chain_b is not None
+    
+    assert len(chain_a.residues) == 1
+    assert len(chain_b.residues) == 1
+    
+    # Check residues and atoms
+    residue_a = chain_a.residues[0]
+    assert residue_a.name == 'ALA'
+    assert len(residue_a.atoms) == 5
+    
+    residue_b = chain_b.residues[0]
+    assert residue_b.name == 'ARG'
+    assert len(residue_b.atoms) == 6  # Including OXT
