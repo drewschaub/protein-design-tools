@@ -6,7 +6,38 @@ from ..core.protein_structure import ProteinStructure
 from ..core.chain import Chain
 from ..core.residue import Residue
 from ..core.atom import Atom
+import requests
+from io import StringIO
 
+def fetch_pdb(pdb_id: str, file_path: Optional[str] = None) -> ProteinStructure:
+    """
+    Fetch a PDB file from RCSB PDB by its ID and optionally save it to a file.
+
+    Parameters
+    ----------
+    pdb_id : str
+        The PDB ID of the structure to fetch.
+    file_path : str, optional
+        Path to save the downloaded PDB file. If None, the file is not saved.
+
+    Returns
+    -------
+    ProteinStructure
+        The parsed protein structure.
+    """
+    url = f"https://files.rcsb.org/download/{pdb_id}.pdb"
+    response = requests.get(url)
+    if response.status_code == 200:
+        if file_path:
+            with open(file_path, "w") as file:
+                file.write(response.text)
+            return read_pdb(file_path)
+        else:
+            # If not saving to disk, store content in-memory
+            temp_path = StringIO(response.text)
+            return read_pdb(temp_path)
+    else:
+        raise ValueError(f"Failed to fetch PDB ID {pdb_id}: HTTP status {response.status_code}")
 
 def read_pdb(
     file_path: str, chains: Optional[List[str]] = None, name: Optional[str] = None
