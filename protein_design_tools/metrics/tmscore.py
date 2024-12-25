@@ -79,28 +79,3 @@ def compute_tm_score_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     tm_scores = 1 / (1 + (distances / d0) ** 2)
     tm_score = torch.sum(tm_scores) / L_ref
     return tm_score
-
-
-def compute_tm_score_tensorflow(P: tnp.ndarray, Q: tnp.ndarray) -> tnp.ndarray:
-    """
-    Compute TM-score between two NxD TensorFlow tensors using tf.experimental.numpy.
-
-    Parameters
-    ----------
-    P : tnp.ndarray
-        Mobile points, shape (N, D)
-    Q : tnp.ndarray
-        Target points, shape (N, D)
-
-    Returns
-    -------
-    tnp.ndarray
-        TM-score between P and Q
-    """
-    L_ref = tnp.array(P.shape[0], dtype=P.dtype)
-    d0 = 1.24 * tnp.power(L_ref - 15.0, 1 / 3) - 1.8
-    d0 = tnp.maximum(d0, 1.0)  # Ensure d0 is positive
-    distances = tnp.linalg.norm(P - Q, axis=1)
-    tm_scores = 1.0 / (1.0 + (distances / d0) ** 2)
-    tm_score = tnp.sum(tm_scores) / L_ref
-    return tm_score

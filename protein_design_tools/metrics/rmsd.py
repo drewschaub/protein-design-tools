@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow.experimental.numpy as tnp
+import tensorflow as tf
 import torch
 import jax.numpy as jnp
 from jax import jit
@@ -26,15 +26,15 @@ def compute_rmsd_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
     return jnp.sqrt(jnp.mean(jnp.sum((P - Q) ** 2, axis=1)))
 
 
-def compute_rmsd_numpy(P: np.ndarray, Q: np.ndarray) -> float:
+def compute_rmsd_numpy(P: tf.tensor, Q: tf.tensor) -> float:
     """
     Compute RMSD between two NxD NumPy arrays.
 
     Parameters
     ----------
-    P : np.ndarray
+    P : tf.tensor
         Mobile points, shape (N, D)
-    Q : np.ndarray
+    Q : tf.tensor
         Target points, shape (N, D)
 
     Returns
@@ -43,7 +43,7 @@ def compute_rmsd_numpy(P: np.ndarray, Q: np.ndarray) -> float:
         RMSD between P and Q
     """
     assert P.shape == Q.shape
-    return np.sqrt(np.mean(np.sum((P - Q) ** 2, axis=1)))
+    return tf.sqrt(tf.reduce_mean(tf.reduce_sum((P - Q) ** 2, axis=1)))
 
 
 def compute_rmsd_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
@@ -65,22 +65,3 @@ def compute_rmsd_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     assert P.shape == Q.shape
     return torch.sqrt(torch.mean(torch.sum((P - Q) ** 2, dim=1)))
 
-
-def compute_rmsd_tensorflow(P: tnp.ndarray, Q: tnp.ndarray) -> tnp.ndarray:
-    """
-    Compute RMSD between two NxD TensorFlow tensors using tf.experimental.numpy.
-
-    Parameters
-    ----------
-    P : tnp.ndarray
-        Mobile points, shape (N, D)
-    Q : tnp.ndarray
-        Target points, shape (N, D)
-
-    Returns
-    -------
-    tnp.ndarray
-        RMSD between P and Q
-    """
-    assert P.shape == Q.shape
-    return tnp.sqrt(tnp.mean(tnp.sum((P - Q) ** 2, axis=1)))

@@ -96,34 +96,3 @@ def compute_gdt_pytorch(
         percentages.append(percentage)
     gdt_ts = torch.mean(torch.stack(percentages))
     return gdt_ts
-
-
-def compute_gdt_tensorflow(
-    P: tf.Tensor, Q: tf.Tensor, thresholds=[1, 2, 4, 8]
-) -> tf.Tensor:
-    """
-    Compute GDT-TS between two NxD TensorFlow tensors.
-
-    Parameters
-    ----------
-    P : tf.Tensor
-        Mobile points, shape (N, D)
-    Q : tf.Tensor
-        Target points, shape (N, D)
-    thresholds : list of float
-        Distance thresholds in Å (default: [1, 2, 4, 8])
-
-    Returns
-    -------
-    tf.Tensor
-        GDT-TS score between P and Q
-    """
-    N = tf.cast(tf.shape(P)[0], P.dtype)
-    distances = tf.norm(P - Q, axis=1)
-    percentages = []
-    for t in thresholds:
-        count = tf.reduce_sum(tf.cast(distances <= t, P.dtype))
-        percentage = (count / N) * 100
-        percentages.append(percentage)
-    gdt_ts = tf.reduce_mean(tf.stack(percentages))
-    return gdt_ts
