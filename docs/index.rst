@@ -10,10 +10,7 @@ Welcome to Protein Design Tools's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   core/index
-   alignment/index
-   io/index
-   utils/index
+   modules
 
 Indices and tables
 ==================
