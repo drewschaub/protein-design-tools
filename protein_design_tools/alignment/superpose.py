@@ -1,10 +1,11 @@
 # protein_design_tools/alignment/superpose.py
 
-from typing import Optional, Dict, Union, List
+from typing import Optional, Dict, Union, List, Tuple
 import numpy as np
 
 from ..core.protein_structure import ProteinStructure
 from ..utils.helpers import parse_residue_selection
+
 
 def superpose_structures(
     mobile: ProteinStructure,
@@ -12,19 +13,36 @@ def superpose_structures(
     atom_type: str = "CA",
     selection: Optional[Dict[str, Union[List[int], List[range]]]] = None,
     method: str = "kabsch",
+    overlapping_residues: Optional[List[Tuple[int, str, str]]] = None,
 ) -> np.ndarray:
     """
     Superpose (align) the 'mobile' structure onto the 'target' structure using
-    the specified alignment method (currently only 'kabsch').
+    the specified alignment method (currently only 'kabsch'), optionally restricting
+    to a list of overlapping residues.
+
+    Parameters
+    ----------
+    mobile, target : ProteinStructure
+        Structures to be aligned.
+    atom_type : str
+        Which atom type to use (e.g. "CA").
+    selection : Dict[str, ...], optional
+        Additional selection of residues.
+    method : str
+        Alignment method (only 'kabsch' supported).
+    overlapping_residues : List[Tuple[int, str, str]], optional
+        Overlapping residues for alignment, e.g. from find_overlapping_residues().
 
     Returns
     -------
     transform_matrix : np.ndarray
-        A 4×4 homogeneous transformation matrix representing the rotation and translation
-        that superposes 'mobile' onto 'target'.
+        A 4×4 homogeneous transformation matrix representing the rotation and
+        translation that superposes 'mobile' onto 'target'.
     """
     if method.lower() == "kabsch":
-        return _superpose_kabsch(mobile, target, atom_type, selection)
+        return _superpose_kabsch(
+            mobile, target, atom_type, selection, overlapping_residues
+        )
     else:
         raise ValueError(f"Unknown alignment method: {method}")
 
@@ -33,16 +51,39 @@ def _superpose_kabsch(
     mobile: ProteinStructure,
     target: ProteinStructure,
     atom_type: str,
-    selection: Optional[Dict[str, Union[List[int], List[range]]]]
+    selection: Optional[Dict[str, Union[List[int], List[range]]]],
+    overlapping_residues: Optional[List[Tuple[int, str, str]]],
 ) -> np.ndarray:
     """
-    Internal function: Perform Kabsch superposition of 'mobile' onto 'target' for matching
-    residues/atoms. Returns a 4x4 homogeneous transform.
+    Internal function: Perform Kabsch superposition of 'mobile' onto 'target' for
+    matching residues/atoms. Returns a 4x4 homogeneous transform.
     """
-    parsed_selection = parse_residue_selection(selection) if selection else None
+    if overlapping_residues:
+        # Build a 'selection' dict keyed by chain, collecting residue numbers
+        # We ignore insertion codes or other info here for simplicity
+        # but you can adapt as needed to handle them.
+        overlap_selection: Dict[str, List[int]] = {}
+        # Example: overlapping_residues might come from find_overlapping_residues() for
+        # chain_id1 & chain_id2. This is a simplified snippet; adapt logic if your
+        # overlap spans multiple chains.
+        for res_seq, _i_code, _res_name in overlapping_residues:
+            chain_id = "A"  # adjust if needed
+            overlap_selection.setdefault(chain_id, []).append(res_seq)
+        combined_selection = (
+            overlap_selection
+            if selection is None
+            else {**selection, **overlap_selection}
+        )
+        parsed_selection = parse_residue_selection(combined_selection)
+    else:
+        parsed_selection = parse_residue_selection(selection) if selection else None
 
-    coords_target = target.get_coordinates(atom_type=atom_type, selection=parsed_selection)
-    coords_mobile = mobile.get_coordinates(atom_type=atom_type, selection=parsed_selection)
+    coords_target = target.get_coordinates(
+        atom_type=atom_type, selection=parsed_selection
+    )
+    coords_mobile = mobile.get_coordinates(
+        atom_type=atom_type, selection=parsed_selection
+    )
 
     if coords_target.shape != coords_mobile.shape or coords_target.size == 0:
         raise ValueError(

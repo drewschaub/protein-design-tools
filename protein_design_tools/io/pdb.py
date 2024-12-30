@@ -80,7 +80,6 @@ def read_pdb(
         if p.suffix.lower() not in [".pdb", ".gz"]:
             raise ValueError("File must have a .pdb or .pdb.gz extension.")
         if p.suffix.lower() == ".gz":
-            import gzip
             with gzip.open(p, "rt") as f:
                 content = f.readlines()
         else:
@@ -92,7 +91,9 @@ def read_pdb(
     return _parse_pdb_content(content, chains, structure)
 
 
-def _parse_pdb_content(content: List[str], chains: Optional[List[str]], structure: ProteinStructure) -> ProteinStructure:
+def _parse_pdb_content(
+    content: List[str], chains: Optional[List[str]], structure: ProteinStructure
+) -> ProteinStructure:
     """
     Parse PDB content and populate the ProteinStructure object.
 

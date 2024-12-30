@@ -3,10 +3,13 @@
 from typing import List, Tuple
 from ..core.protein_structure import ProteinStructure
 
+
 def find_overlapping_residues(
-    protein1: ProteinStructure, chain_id1: str,
-    protein2: ProteinStructure, chain_id2: str,
-    match_res_names: bool = False
+    protein1: ProteinStructure,
+    chain_id1: str,
+    protein2: ProteinStructure,
+    chain_id2: str,
+    match_res_names: bool = False,
 ) -> List[Tuple[int, str, str]]:
     """
     Find overlapping residues between two ProteinStructures for specific chains.
@@ -33,7 +36,7 @@ def find_overlapping_residues(
 
     Notes
     -----
-    - Overlap is based on residue sequence number + insertion code, and optionally 
+    - Overlap is based on residue sequence number + insertion code, and optionally
       residue name if match_res_names=True.
     - If either chain is not found, returns an empty list.
     - You can adapt this for more complex matching logic (like checking one-letter codes
@@ -61,35 +64,36 @@ def find_overlapping_residues(
     # Intersection
     overlap = residues1.intersection(residues2)
 
-    # Build sorted list 
+    # Build sorted list
     # If we used empty string for the 3rd element when match_res_names=False,
-    # we might want to retrieve actual r.name from each chain. 
+    # we might want to retrieve actual r.name from each chain.
     # But for simplicity, we store as is.
     # We'll sort primarily by res_seq, then by i_code
-    overlap_list = sorted(
-        overlap,
-        key=lambda x: (x[0], x[1])  # (res_seq, i_code)
-    )
+    overlap_list = sorted(overlap, key=lambda x: (x[0], x[1]))  # (res_seq, i_code)
 
     # If match_res_names=False, that 3rd element might be "".
     # If it's non-empty, it means they matched names as well.
 
     # Return a standardized structure: (res_seq, i_code, res_name).
-    # If we didn't store res_name, put a placeholder '???' or look it up 
+    # If we didn't store res_name, put a placeholder '???' or look it up
     # from chain1 or chain2. We'll do a small tweak here to handle both:
     results = []
-    for (res_seq, i_code, name_field) in overlap_list:
+    for res_seq, i_code, name_field in overlap_list:
         if match_res_names:
             # We have actual residue name
             res_name = name_field
         else:
-            # We didn't store the name, let's just fetch from chain1 or chain2 
+            # We didn't store the name, let's just fetch from chain1 or chain2
             # for convenience. If it doesn't exist or differ, we can store "???".
             # We'll do a quick search:
             # This is optional. You might just return no name or an empty string.
             residue_in_chain1 = next(
-                (r for r in chain1.residues if r.res_seq == res_seq and r.i_code == i_code),
-                None
+                (
+                    r
+                    for r in chain1.residues
+                    if r.res_seq == res_seq and r.i_code == i_code
+                ),
+                None,
             )
             res_name = residue_in_chain1.name if residue_in_chain1 else "???"
 

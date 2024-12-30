@@ -2,8 +2,10 @@
 
 import numpy as np
 from dataclasses import dataclass, field
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, Dict, List, Callable  # <-- add Callable here!
+
 from .chain import Chain
+from .residue import Residue
 from ..utils.helpers import parse_residue_selection
 
 
@@ -65,7 +67,7 @@ class ProteinStructure:
         # 1) Merge chain(s) info into a selection dictionary if needed
         #    so that each specified chain -> all residue IDs
         chain_selection = {}
-        
+
         # If user specified chain=..., override chains
         if chain is not None:
             # single chain
@@ -73,12 +75,12 @@ class ProteinStructure:
         elif chains is not None:
             for ch_id in chains:
                 chain_selection[ch_id] = None
-        
+
         # 2) If user also provided `selection`, unify with chain_selection
         #    - If chain_selection is empty, we just parse selection as usual
         #    - If chain_selection is not empty, it overrides or merges logic
         parsed_selection = parse_residue_selection(selection) if selection else {}
-        
+
         # If chain_selection is specified, we build a combined dict
         # The logic here: if chain X is in chain_selection, that means "all" residues
         # unless user also gave `selection` for that chain -> intersection
@@ -136,12 +138,12 @@ class ProteinStructure:
                         coordinates.append([atom.x, atom.y, atom.z])
                     elif atom_type == "non-hydrogen" and atom.element != "H":
                         coordinates.append([atom.x, atom.y, atom.z])
-        
+
         return np.array(coordinates)
 
     def remove_residues_by_name(self, residue_name: str) -> None:
         """
-        Remove all residues from this ProteinStructure that have the specified residue name.
+        Remove all residues from this ProteinStructure that have the specified res name.
 
         Parameters
         ----------
@@ -150,10 +152,7 @@ class ProteinStructure:
         """
         for chain in self.chains:
             # Keep only residues whose name != residue_name
-            chain.residues = [
-                r for r in chain.residues
-                if r.name != residue_name
-            ]
+            chain.residues = [r for r in chain.residues if r.name != residue_name]
 
     def remove_residues_if(self, condition: Callable[[Residue], bool]) -> None:
         """
@@ -197,8 +196,25 @@ class ProteinStructure:
         Remove all residues not in the standard 20 amino acids set.
         """
         standard_aa = {
-            "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY",
-            "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER",
-            "THR", "TRP", "TYR", "VAL"
+            "ALA",
+            "ARG",
+            "ASN",
+            "ASP",
+            "CYS",
+            "GLN",
+            "GLU",
+            "GLY",
+            "HIS",
+            "ILE",
+            "LEU",
+            "LYS",
+            "MET",
+            "PHE",
+            "PRO",
+            "SER",
+            "THR",
+            "TRP",
+            "TYR",
+            "VAL",
         }
         self.remove_residues_if(lambda r: r.name not in standard_aa)

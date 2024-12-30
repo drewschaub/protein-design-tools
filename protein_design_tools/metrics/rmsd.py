@@ -63,4 +63,3 @@ def compute_rmsd_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     """
     assert P.shape == Q.shape
     return torch.sqrt(torch.mean(torch.sum((P - Q) ** 2, dim=1)))
-

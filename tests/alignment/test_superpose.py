@@ -7,7 +7,11 @@ from protein_design_tools.core.atom import Atom
 from protein_design_tools.core.residue import Residue
 from protein_design_tools.core.chain import Chain
 from protein_design_tools.core.protein_structure import ProteinStructure
-from protein_design_tools.alignment.superpose import superpose_structures, apply_transform
+from protein_design_tools.alignment.superpose import (
+    superpose_structures,
+    apply_transform,
+)
+
 
 def test_superpose_kabsch():
     mobile = ProteinStructure()
@@ -22,36 +26,36 @@ def test_superpose_kabsch():
     # Add a few residues with CA atoms
     for i in range(3):
         # Provide i_code as an empty string if your constructor is: Residue(res_seq, name, i_code)
-        mobile_res = Residue(i+1, "ALA", "")
-        target_res = Residue(i+1, "ALA", "")
+        mobile_res = Residue(i + 1, "ALA", "")
+        target_res = Residue(i + 1, "ALA", "")
 
         # Create a CA Atom for each
         # Just put random coords
         atom_mobile = Atom(
-            atom_id=i+1,
+            atom_id=i + 1,
             name="CA",
             alt_loc="",
             x=float(i),  # simple coords
-            y=float(i+0.5),
-            z=float(i+1),
+            y=float(i + 0.5),
+            z=float(i + 1),
             occupancy=1.0,
             temp_factor=0.0,
             segment_id="",
             element="C",
-            charge=""
+            charge="",
         )
         atom_target = Atom(
-            atom_id=i+1,
+            atom_id=i + 1,
             name="CA",
             alt_loc="",
-            x=float(i+2),  # offset to create difference
-            y=float(i+2.5),
-            z=float(i+3),
+            x=float(i + 2),  # offset to create difference
+            y=float(i + 2.5),
+            z=float(i + 3),
             occupancy=1.0,
             temp_factor=0.0,
             segment_id="",
             element="C",
-            charge=""
+            charge="",
         )
 
         mobile_res.atoms.append(atom_mobile)
@@ -63,7 +67,9 @@ def test_superpose_kabsch():
     # Now we have a mobile and target structure each with 3 residues, each having a single CA.
 
     # 1) compute transformation via kabsch on CA
-    transform = superpose_structures(mobile, target, atom_type="CA", selection=None, method="kabsch")
+    transform = superpose_structures(
+        mobile, target, atom_type="CA", selection=None, method="kabsch"
+    )
 
     # 2) apply transform to mobile in place
     apply_transform(mobile, transform)
