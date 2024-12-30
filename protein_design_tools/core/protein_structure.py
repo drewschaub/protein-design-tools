@@ -139,3 +139,66 @@ class ProteinStructure:
         
         return np.array(coordinates)
 
+    def remove_residues_by_name(self, residue_name: str) -> None:
+        """
+        Remove all residues from this ProteinStructure that have the specified residue name.
+
+        Parameters
+        ----------
+        residue_name : str
+            Residue name to be removed (e.g. 'HOH' for water).
+        """
+        for chain in self.chains:
+            # Keep only residues whose name != residue_name
+            chain.residues = [
+                r for r in chain.residues
+                if r.name != residue_name
+            ]
+
+    def remove_residues_if(self, condition: Callable[[Residue], bool]) -> None:
+        """
+        Remove residues in-place if they match a given condition (predicate).
+
+        Parameters
+        ----------
+        condition : Callable[[Residue], bool]
+            A function that takes a Residue object and returns True if
+            that residue should be removed.
+
+        Examples
+        --------
+        # Remove all water residues (HOH):
+        protein.remove_residues_if(lambda r: r.name == "HOH")
+
+        # Remove all non-standard amino acids:
+        standard_aa = {
+            "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY",
+            "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER",
+            "THR", "TRP", "TYR", "VAL"
+        }
+        protein.remove_residues_if(lambda r: r.name not in standard_aa)
+        """
+        for chain in self.chains:
+            new_list = []
+            for residue in chain.residues:
+                # If condition(...) is True, we remove that residue
+                if not condition(residue):
+                    new_list.append(residue)
+            chain.residues = new_list
+
+    def remove_water_residues(self) -> None:
+        """
+        Remove all water residues (often named 'HOH') in-place.
+        """
+        self.remove_residues_if(lambda r: r.name == "HOH")
+
+    def remove_non_standard_residues(self) -> None:
+        """
+        Remove all residues not in the standard 20 amino acids set.
+        """
+        standard_aa = {
+            "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY",
+            "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER",
+            "THR", "TRP", "TYR", "VAL"
+        }
+        self.remove_residues_if(lambda r: r.name not in standard_aa)
