@@ -13,7 +13,7 @@ release = '0.1.28'
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../protein_design_tools/'))
+sys.path.insert(0, os.path.abspath('../..'))  # Adjust as needed based on directory structure
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
