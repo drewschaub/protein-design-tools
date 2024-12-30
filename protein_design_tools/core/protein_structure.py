@@ -186,7 +186,7 @@ class ProteinStructure:
                     new_list.append(residue)
             chain.residues = new_list
 
-    def remove_water_residues(self) -> None:
+    def remove_water(self) -> None:
         """
         Remove all water residues (often named 'HOH') in-place.
         """
