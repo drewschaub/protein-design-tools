@@ -5,7 +5,7 @@ from jax import jit
 
 
 @jit
-def compute_tm_score_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
+def compute_tmscore_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
     """
     Compute TM-score between two NxD JAX arrays using JIT compilation.
 
@@ -30,7 +30,7 @@ def compute_tm_score_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
     return tm_score
 
 
-def compute_tm_score_numpy(P: np.ndarray, Q: np.ndarray) -> float:
+def compute_tmscore_numpy(P: np.ndarray, Q: np.ndarray) -> float:
     """
     Compute TM-score between two NxD NumPy arrays.
 
@@ -55,7 +55,7 @@ def compute_tm_score_numpy(P: np.ndarray, Q: np.ndarray) -> float:
     return tm_score
 
 
-def compute_tm_score_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
+def compute_tmscore_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     """
     Compute TM-score between two NxD PyTorch tensors.
 

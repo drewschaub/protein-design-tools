@@ -62,6 +62,7 @@ class ProteinStructure:
         -------
         np.ndarray
             Array of coordinates.
+
         """
 
         # 1) Merge chain(s) info into a selection dictionary if needed
@@ -149,6 +150,7 @@ class ProteinStructure:
         ----------
         residue_name : str
             Residue name to be removed (e.g. 'HOH' for water).
+            
         """
         for chain in self.chains:
             # Keep only residues whose name != residue_name

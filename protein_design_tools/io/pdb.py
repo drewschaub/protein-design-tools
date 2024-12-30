@@ -34,6 +34,7 @@ def fetch_pdb(
     -------
     ProteinStructure
         The parsed protein structure.
+
     """
     structure = ProteinStructure(name=name)
 
@@ -72,6 +73,7 @@ def read_pdb(
     -------
     ProteinStructure
         The parsed protein structure.
+
     """
     structure = ProteinStructure(name=name)
 
@@ -110,6 +112,7 @@ def _parse_pdb_content(
     -------
     ProteinStructure
         The populated ProteinStructure object.
+        
     """
     for line in content:
         if line.startswith("ATOM") or line.startswith("HETATM"):
