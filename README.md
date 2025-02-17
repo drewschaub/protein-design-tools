@@ -24,7 +24,7 @@
 
 ## Overview
 
-**Protein-Design Tools** is a comprehensive Python library tailored for structural bioinformatics, with a specific focus on protein design and engineering. It provides a suite of tools for analyzing and manipulating protein structures, enabling researchers and practitioners to perform complex structural comparisons, design new proteins, and engineer existing ones with ease.
+**Protein-Design Tools** is a Python library tailored for structural bioinformatics, with a specific focus on protein design and engineering. It provides a suite of tools for analyzing and manipulating protein structures, enabling researchers and practitioners to perform complex structural comparisons, design new proteins, and engineer existing ones with ease.
 
 Whether you're conducting research in protein folding, designing novel enzymes, or engineering therapeutic proteins, Protein-Design Tools offers the functionalities you need to advance your projects.
 
