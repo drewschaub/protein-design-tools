@@ -1,2 +1,2 @@
-# This file can be empty or contain initialization code for the package
+# protein_design_tools/__init__.py
 
