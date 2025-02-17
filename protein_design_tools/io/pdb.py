@@ -112,7 +112,7 @@ def _parse_pdb_content(
     -------
     ProteinStructure
         The populated ProteinStructure object.
-        
+
     """
     for line in content:
         if line.startswith("ATOM") or line.startswith("HETATM"):

@@ -150,7 +150,7 @@ class ProteinStructure:
         ----------
         residue_name : str
             Residue name to be removed (e.g. 'HOH' for water).
-            
+
         """
         for chain in self.chains:
             # Keep only residues whose name != residue_name
