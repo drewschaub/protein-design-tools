@@ -4,7 +4,7 @@ from typing import Union, List, Dict
 
 
 def parse_residue_selection(
-    selection: Union[Dict[str, List[Union[int, range]]], None]
+    selection: Union[Dict[str, List[Union[int, range]]], None],
 ) -> Dict[str, List[int]]:
     """
     Parse residue selection input into a standardized dictionary.
