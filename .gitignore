@@ -72,17 +72,8 @@ ipython_config.py
 # .python-version
 
 # virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
+.venv/
+.venv-dev/
 
 # Rope project settings
 .ropeproject
@@ -129,9 +120,5 @@ cython_debug/
 # Log files
 *.log
 
-# Environment variables
-.env.local
-.env.*.local
-
-# Conda environment
-.conda/
+# notebooks
+notebooks/

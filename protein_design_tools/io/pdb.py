@@ -2,7 +2,7 @@
 
 import gzip
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 from ..core.protein_structure import ProteinStructure
 from ..core.chain import Chain
 from ..core.residue import Residue
@@ -17,7 +17,7 @@ def fetch_pdb(
     name: Optional[str] = None,
 ) -> ProteinStructure:
     """
-    Fetch a PDB file from RCSB PDB by its ID and optionally save it to a file.
+    Fetch a PDB file from RCSB PDB and return it as a :class:`ProteinStructure`
 
     Parameters
     ----------
@@ -55,10 +55,13 @@ def fetch_pdb(
 
 
 def read_pdb(
-    file_path: str, chains: Optional[List[str]] = None, name: Optional[str] = None
+    file_path: str,
+    chains: Optional[List[str]] = None,
+    name: Optional[str] = None
 ) -> ProteinStructure:
     """
-    Read a PDB file and return a ProteinStructure object.
+    Read a local ``.pdb`` or ``.pdb.gz`` file (or file-like) into a
+    :class:`ProteinStructure`.
 
     Parameters
     ----------
@@ -86,8 +89,7 @@ def read_pdb(
                 content = f.readlines()
         else:
             content = p.read_text().splitlines()
-    else:
-        # Assume file_path is a file-like object
+    else:  # file-like
         content = file_path.read().splitlines()
 
     return _parse_pdb_content(content, chains, structure)
