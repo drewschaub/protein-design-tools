@@ -1,3 +1,11 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(".."))
+
+import sphinx.ext.autodoc
+
+# flake8: noqa: E402
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -10,13 +18,6 @@ project = "protein-design-tools"
 copyright = "2024, Andrew Schaub"
 author = "Andrew Schaub"
 release = "0.1.28"
-
-import os
-import sys
-
-sys.path.insert(
-    0, os.path.abspath("../")
-)  # Adjust as needed based on directory structure
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

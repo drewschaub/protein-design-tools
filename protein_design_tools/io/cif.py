@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import List, Optional
 
 import requests
-from functools import partial
 
 from ..core.protein_structure import ProteinStructure
 from ..core.chain import Chain
@@ -152,13 +151,17 @@ def _parse_cif_content(
 
     """
     field_names: list[str] = []
-    in_atom_loop = False
     chains_by_name: dict[str, Chain] = {}
 
     def _add_atom(rec: dict[str, str]) -> None:
-        # help lambda functions for non-polymer/hetero atoms (ligands, waters, ions)
-        _to_int = lambda s, d=None: d if s in (".", "?", "") else int(s)
-        _to_float = lambda s, d=0.0: d if s in (".", "?", "") else float(s)
+
+        # In mmCIF . or ? means “unknown / not applicable” for any data item,
+        # so the parser must cope with those placeholders.
+        def _to_int(s: str, d: int = 0) -> int:
+            return d if s in {".", "?", ""} else int(s)
+
+        def _to_float(s: str, d: float = 0.0) -> float:
+            return d if s in {".", "?", ""} else float(s)
 
         # prefer canonical (auth) ID, fall back to label ID
         label_chain = rec.get("chain_id", "")
