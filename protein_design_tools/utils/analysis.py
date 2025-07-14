@@ -1,7 +1,145 @@
 # protein_design_tools/utils/analysis.py
 
-from typing import List, Tuple
+import numpy as np
+from typing import List, Tuple, Optional, Dict
+from ..core.chain import Chain
 from ..core.protein_structure import ProteinStructure
+
+
+def _nw_align(seq1: str, seq2: str) -> tuple[str, str]:
+    """
+    Minimal Needleman-Wunsch global alignment (identity scoring, gap = -1).
+
+    Returns the two aligned strings (with '-').
+    """
+    m, n = len(seq1), len(seq2)
+    # DP matrix
+    score = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(1, m + 1):
+        score[i][0] = -i
+    for j in range(1, n + 1):
+        score[0][j] = -j
+
+    # fill
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            match = score[i - 1][j - 1] + (1 if seq1[i - 1] == seq2[j - 1] else -1)
+            delete = score[i - 1][j] - 1
+            insert = score[i][j - 1] - 1
+            score[i][j] = max(match, delete, insert)
+
+    # traceback
+    aln1, aln2 = [], []
+    i, j = m, n
+    while i > 0 or j > 0:
+        if (
+            i > 0
+            and j > 0
+            and score[i][j]
+            == score[i - 1][j - 1] + (1 if seq1[i - 1] == seq2[j - 1] else -1)
+        ):
+            aln1.append(seq1[i - 1])
+            aln2.append(seq2[j - 1])
+            i -= 1
+            j -= 1
+        elif i > 0 and score[i][j] == score[i - 1][j] - 1:
+            aln1.append(seq1[i - 1])
+            aln2.append("-")
+            i -= 1
+        else:
+            aln1.append("-")
+            aln2.append(seq2[j - 1])
+            j -= 1
+    return "".join(reversed(aln1)), "".join(reversed(aln2))
+
+
+def _raw_overlap(
+    chain1: Chain,
+    chain2: Chain,
+    match_res_names: bool = False,
+) -> list[tuple[int, str, str]]:
+    """
+    Internal: residue-ID intersection between two Chain objects.
+    Returns a sorted list of (res_seq, i_code, res_name1).
+    """
+
+    def key(r):  # tuple used for set operations
+        return (r.res_seq, r.i_code, r.name if match_res_names else "")
+
+    set1 = {key(r) for r in chain1.residues}
+    set2 = {key(r) for r in chain2.residues}
+
+    hits = sorted(set1 & set2, key=lambda x: (x[0], x[1]))
+    out = []
+    for res_seq, i_code, _ in hits:
+        name = next(
+            r.name
+            for r in chain1.residues
+            if r.res_seq == res_seq and r.i_code == i_code
+        )
+        out.append((res_seq, i_code, name))
+    return out
+
+
+def build_residue_map(seq_ref: str, seq_model: str) -> dict[int, int]:
+    """
+    Map residue numbers in the reference sequence → residue numbers in the model
+    by global identity alignment.
+
+    Parameters
+    ----------
+    seq_ref, seq_model : str
+        Full amino-acid sequences (1-letter codes).
+
+    Returns
+    -------
+    dict
+        Keys are 1-based residue indices in `seq_ref`,
+        values are 1-based indices in `seq_model`.
+    """
+    aln_ref, aln_mod = _nw_align(seq_ref, seq_model)
+    ref_i = mod_i = 0
+    mapping = {}
+    for a, b in zip(aln_ref, aln_mod):
+        if a != "-":
+            ref_i += 1
+        if b != "-":
+            mod_i += 1
+        if a != "-" and b != "-":
+            mapping[ref_i] = mod_i
+    return mapping
+
+
+def coords_from_overlap(
+    struct: ProteinStructure,
+    chain_id: str,
+    overlap: list[tuple[int, str, str]],
+    atom_name: str = "CA",
+) -> np.ndarray:
+    """
+    Given a ProteinStructure, a chain, and an overlap list of
+    (res_seq, i_code, res_name), return an (N×3) array of
+    [x,y,z] for `atom_name` in *exact* overlap order.
+    """
+    # 1) find chain
+    chain = next((c for c in struct.chains if c.name == chain_id), None)
+    if chain is None:
+        return np.zeros((0, 3), dtype=float)
+
+    pts = []
+    for res_seq, i_code, _ in overlap:
+        res = next(
+            (r for r in chain.residues if r.res_seq == res_seq and r.i_code == i_code),
+            None,
+        )
+        if not res:
+            continue
+        atom = next((a for a in res.atoms if a.name == atom_name), None)
+        if atom:
+            pts.append((atom.x, atom.y, atom.z))
+
+    return np.array(pts, dtype=float)
+
 
 def filter_overlap_by_atom(
     ref: ProteinStructure,
@@ -12,45 +150,40 @@ def filter_overlap_by_atom(
     atom_name: str = "CA",
 ) -> list[tuple[int, str, str]]:
     """
-    Filter an overlap list to only those residues where both structures have a given atom.
+    Keep only those (res_seq, i_code, res_name) from *overlap* for which **both**
+    structures contain *atom_name*.
+
+    The routine is agnostic to residue renumbering: if the first residue of the
+    model is 1 while the crystal starts at 13, supply an *overlap* list that
+    already accounts for that shift (see `build_residue_map`).
 
     Parameters
     ----------
-    ref : ProteinStructure
-        Reference protein structure.
-    mob : ProteinStructure
-        Mobile (to-be-aligned) protein structure.
+    ref, mob : ProteinStructure
+        Reference and mobile structures.
     overlap : list of tuple
-        List of residue identifiers produced by `find_overlapping_residues()`,
-        each tuple `(res_seq, i_code, res_name)`.
-    chain_ref : str, optional
-        Chain ID in `ref` to consider (default: "A").
-    chain_mob : str, optional
-        Chain ID in `mob` to consider (default: "A").
+        Triplets ``(res_seq, i_code, res_name)`` describing candidate residues
+        in *ref*.  Only those for which the corresponding residue in *mob*
+        exists **and** both carry *atom_name* are kept.
+    chain_ref, chain_mob : str, optional
+        Chain identifiers in the two structures (default: "A").
     atom_name : str, optional
-        Atom name to require in both structures (e.g. "CA", "N", "O") (default: "CA").
+        Atom to require in both residues (default: "CA").
 
     Returns
     -------
     list of tuple
-        A filtered list of `(res_seq, i_code, res_name)` containing only those
-        residues for which **both** `ref` and `mob` have an atom named `atom_name`
-        in the specified chains.
-
-    Notes
-    -----
-    - Uses residue sequence number and insertion code from the original `overlap`.
-    - If a residue is missing in either chain, or lacks the specified atom,
-      it is dropped.
-    - Useful to ensure equal‐length coordinate arrays before Kabsch superposition.
+        Filtered overlap list, same tuple format as input.
     """
-    c_ref = next(ch for ch in ref.chains if ch.name == chain_ref)
-    c_mob = next(ch for ch in mob.chains if ch.name == chain_mob)
+    c_ref = next((ch for ch in ref.chains if ch.name == chain_ref), None)
+    c_mob = next((ch for ch in mob.chains if ch.name == chain_mob), None)
+    if not c_ref or not c_mob:
+        return []
 
-    def has_atom(residue, aname):
-        return any(a.name == aname for a in residue.atoms)
+    def has_atom(res, an):  # small helper
+        return any(a.name == an for a in res.atoms)
 
-    filtered = []
+    ok = []
     for res_seq, i_code, res_name in overlap:
         r_ref = next(
             (r for r in c_ref.residues if r.res_seq == res_seq and r.i_code == i_code),
@@ -60,9 +193,14 @@ def filter_overlap_by_atom(
             (r for r in c_mob.residues if r.res_seq == res_seq and r.i_code == i_code),
             None,
         )
-        if r_ref and r_mob and has_atom(r_ref, atom_name) and has_atom(r_mob, atom_name):
-            filtered.append((res_seq, i_code, res_name))
-    return filtered
+        if (
+            r_ref
+            and r_mob
+            and has_atom(r_ref, atom_name)
+            and has_atom(r_mob, atom_name)
+        ):
+            ok.append((res_seq, i_code, res_name))
+    return ok
 
 
 def find_overlapping_residues(
@@ -71,6 +209,7 @@ def find_overlapping_residues(
     protein2: ProteinStructure,
     chain_id2: str,
     match_res_names: bool = False,
+    index_map1_to_2: Optional[Dict[int, int]] = None,
 ) -> List[Tuple[int, str, str]]:
     """
     Find overlapping residues between two ProteinStructures for specific chains.
@@ -88,76 +227,34 @@ def find_overlapping_residues(
     match_res_names : bool, optional
         If True, also require residue names (e.g., 'ALA') to match.
         If False (default), only match by residue number + insertion code.
-
-    Returns
-    -------
-    List[Tuple[int, str, str]]
-        A sorted list of overlapping residue tuples:
-        (res_seq, i_code, res_name) for residues that exist in both chains.
+    index_map1_to_2 : dict, optional
+        Mapping *protein1* residue numbers ➜ *protein2* residue numbers.
+        Create it with :func:`build_residue_map` when the two structures use
+        different numbering (e.g. crystal begins at 13, model at 1).
+        If supplied, `chain_id2` is ignored and `chain_id1` is used for both
+        structures.
 
     Notes
     -----
-    - Overlap is based on residue sequence number + insertion code, and optionally
-      residue name if match_res_names=True.
-    - If either chain is not found, returns an empty list.
-    - You can adapt this for more complex matching logic (like checking one-letter codes
-      or alignment-based residue mapping).
+    • When *index_map1_to_2* is given the function transparently renumbers
+      *protein2* on the fly, so downstream code can work in the crystal’s
+      numbering scheme.
+    • Falls back to legacy behaviour when the mapping is *None*.
     """
-    # Retrieve the specified chains
     chain1 = next((ch for ch in protein1.chains if ch.name == chain_id1), None)
     chain2 = next((ch for ch in protein2.chains if ch.name == chain_id2), None)
     if not chain1 or not chain2:
-        return []  # If either chain doesn't exist, no overlap
+        return []
 
-    # Build sets for each chain
-    # Each residue is identified by (res_seq, i_code, res_name).
-    # If match_res_names=False, we might ignore res_name or store it separately.
-    residues1 = set()
-    for r in chain1.residues:
-        key = (r.res_seq, r.i_code, r.name if match_res_names else "")
-        residues1.add(key)
+    if index_map1_to_2:
+        # Build a synthetic chain with renumbered residues for protein2
+        from copy import deepcopy
 
-    residues2 = set()
-    for r in chain2.residues:
-        key = (r.res_seq, r.i_code, r.name if match_res_names else "")
-        residues2.add(key)
+        chain2 = deepcopy(chain2)  # local copy
+        for r in chain2.residues:
+            if r.res_seq in index_map1_to_2.values():
+                # inverse lookup: model# -> crystal#
+                new_num = next(k for k, v in index_map1_to_2.items() if v == r.res_seq)
+                r.res_seq = new_num
 
-    # Intersection
-    overlap = residues1.intersection(residues2)
-
-    # Build sorted list
-    # If we used empty string for the 3rd element when match_res_names=False,
-    # we might want to retrieve actual r.name from each chain.
-    # But for simplicity, we store as is.
-    # We'll sort primarily by res_seq, then by i_code
-    overlap_list = sorted(overlap, key=lambda x: (x[0], x[1]))  # (res_seq, i_code)
-
-    # If match_res_names=False, that 3rd element might be "".
-    # If it's non-empty, it means they matched names as well.
-
-    # Return a standardized structure: (res_seq, i_code, res_name).
-    # If we didn't store res_name, put a placeholder '???' or look it up
-    # from chain1 or chain2. We'll do a small tweak here to handle both:
-    results = []
-    for res_seq, i_code, name_field in overlap_list:
-        if match_res_names:
-            # We have actual residue name
-            res_name = name_field
-        else:
-            # We didn't store the name, let's just fetch from chain1 or chain2
-            # for convenience. If it doesn't exist or differ, we can store "???".
-            # We'll do a quick search:
-            # This is optional. You might just return no name or an empty string.
-            residue_in_chain1 = next(
-                (
-                    r
-                    for r in chain1.residues
-                    if r.res_seq == res_seq and r.i_code == i_code
-                ),
-                None,
-            )
-            res_name = residue_in_chain1.name if residue_in_chain1 else "???"
-
-        results.append((res_seq, i_code, res_name))
-
-    return results
+    return _raw_overlap(chain1, chain2, match_res_names)

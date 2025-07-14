@@ -4,7 +4,6 @@ from typing import Optional, Dict, Union, List, Tuple
 import numpy as np
 
 from ..core.protein_structure import ProteinStructure
-from ..utils.helpers import parse_residue_selection
 
 
 def superpose_structures(
@@ -58,38 +57,60 @@ def _superpose_kabsch(
     Internal function: Perform Kabsch superposition of 'mobile' onto 'target' for
     matching residues/atoms. Returns a 4x4 homogeneous transform.
     """
-    if overlapping_residues:
-        # Build a 'selection' dict keyed by chain, collecting residue numbers
-        # We ignore insertion codes or other info here for simplicity
-        # but you can adapt as needed to handle them.
-        overlap_selection: Dict[str, List[int]] = {}
-        # Example: overlapping_residues might come from find_overlapping_residues() for
-        # chain_id1 & chain_id2. This is a simplified snippet; adapt logic if your
-        # overlap spans multiple chains.
-        for res_seq, _i_code, _res_name in overlapping_residues:
-            chain_id = "A"  # adjust if needed
-            overlap_selection.setdefault(chain_id, []).append(res_seq)
-        combined_selection = (
-            overlap_selection
-            if selection is None
-            else {**selection, **overlap_selection}
-        )
-        parsed_selection = parse_residue_selection(combined_selection)
-    else:
-        parsed_selection = parse_residue_selection(selection) if selection else None
 
-    coords_target = target.get_coordinates(
-        atom_type=atom_type, selection=parsed_selection
+    # Build coords from overlap list, skipping missing atoms
+    def _coords_from_overlap(
+        struct: ProteinStructure,
+        chain_id: str,
+        overlap: list[tuple[int, str, str]],
+        atom_name: str,
+    ) -> np.ndarray:
+        # find the chain
+        chain = next((c for c in struct.chains if c.name == chain_id), None)
+        if chain is None:
+            return np.empty((0, 3))
+        pts = []
+        for res_seq, i_code, _ in overlap:
+            # locate residue
+            res = next(
+                (
+                    r
+                    for r in chain.residues
+                    if r.res_seq == res_seq and r.i_code == i_code
+                ),
+                None,
+            )
+            if not res:
+                continue
+            # locate atom
+            atom = next((a for a in res.atoms if a.name == atom_name), None)
+            if atom:
+                pts.append([atom.x, atom.y, atom.z])
+        return np.asarray(pts)
+
+    if overlapping_residues is None:
+        raise ValueError("Must supply overlapping_residues to _superpose_kabsch")
+
+    # get CA/backbone/etc coords in the same order for both structures
+    chain_id_ref = chain_id_mob = "A"  # or pull from function args if you generalize
+    coords_t = _coords_from_overlap(
+        target, chain_id_ref, overlapping_residues, atom_type
     )
-    coords_mobile = mobile.get_coordinates(
-        atom_type=atom_type, selection=parsed_selection
+    coords_m = _coords_from_overlap(
+        mobile, chain_id_mob, overlapping_residues, atom_type
     )
 
-    if coords_target.shape != coords_mobile.shape or coords_target.size == 0:
+    # cutoff if too few
+    if coords_t.shape[0] < 3 or coords_m.shape[0] < 3:
         raise ValueError(
-            "Mismatch in coordinate arrays or zero-sized. "
-            "Ensure correct residue overlap and atom_type."
+            f"Need ≥3 common {atom_type} atoms; found "
+            f"{coords_t.shape[0]} vs {coords_m.shape[0]}."
         )
+
+    # ensure same length
+    n = min(len(coords_t), len(coords_m))
+    coords_target = coords_t[:n]
+    coords_mobile = coords_m[:n]
 
     # 1) Compute centroids
     centroid_t = np.mean(coords_target, axis=0)

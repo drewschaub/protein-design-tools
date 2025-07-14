@@ -13,6 +13,29 @@ from ..utils.helpers import parse_residue_selection
 class ProteinStructure:
     """Represents a protein structure and its components."""
 
+    STANDARD_RESIDUES: set[str] = {
+        "ALA",
+        "ARG",
+        "ASN",
+        "ASP",
+        "CYS",
+        "GLN",
+        "GLU",
+        "GLY",
+        "HIS",
+        "ILE",
+        "LEU",
+        "LYS",
+        "MET",
+        "PHE",
+        "PRO",
+        "SER",
+        "THR",
+        "TRP",
+        "TYR",
+        "VAL",
+    }
+
     name: Optional[str] = None
     chains: List[Chain] = field(default_factory=list)
 
@@ -141,6 +164,16 @@ class ProteinStructure:
                         coordinates.append([atom.x, atom.y, atom.z])
 
         return np.array(coordinates)
+
+    def remove_hydrogens(self) -> None:
+        """
+        Delete all atoms whose *element* field is 'H' (case-insensitive).
+        """
+        for chain in self.chains:
+            for residue in chain.residues:
+                residue.atoms[:] = [
+                    a for a in residue.atoms if a.element.upper() != "H"
+                ]
 
     def remove_residues_by_name(self, residue_name: str) -> None:
         """
