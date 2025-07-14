@@ -3,6 +3,67 @@
 from typing import List, Tuple
 from ..core.protein_structure import ProteinStructure
 
+def filter_overlap_by_atom(
+    ref: ProteinStructure,
+    mob: ProteinStructure,
+    overlap: list[tuple[int, str, str]],
+    chain_ref: str = "A",
+    chain_mob: str = "A",
+    atom_name: str = "CA",
+) -> list[tuple[int, str, str]]:
+    """
+    Filter an overlap list to only those residues where both structures have a given atom.
+
+    Parameters
+    ----------
+    ref : ProteinStructure
+        Reference protein structure.
+    mob : ProteinStructure
+        Mobile (to-be-aligned) protein structure.
+    overlap : list of tuple
+        List of residue identifiers produced by `find_overlapping_residues()`,
+        each tuple `(res_seq, i_code, res_name)`.
+    chain_ref : str, optional
+        Chain ID in `ref` to consider (default: "A").
+    chain_mob : str, optional
+        Chain ID in `mob` to consider (default: "A").
+    atom_name : str, optional
+        Atom name to require in both structures (e.g. "CA", "N", "O") (default: "CA").
+
+    Returns
+    -------
+    list of tuple
+        A filtered list of `(res_seq, i_code, res_name)` containing only those
+        residues for which **both** `ref` and `mob` have an atom named `atom_name`
+        in the specified chains.
+
+    Notes
+    -----
+    - Uses residue sequence number and insertion code from the original `overlap`.
+    - If a residue is missing in either chain, or lacks the specified atom,
+      it is dropped.
+    - Useful to ensure equal‐length coordinate arrays before Kabsch superposition.
+    """
+    c_ref = next(ch for ch in ref.chains if ch.name == chain_ref)
+    c_mob = next(ch for ch in mob.chains if ch.name == chain_mob)
+
+    def has_atom(residue, aname):
+        return any(a.name == aname for a in residue.atoms)
+
+    filtered = []
+    for res_seq, i_code, res_name in overlap:
+        r_ref = next(
+            (r for r in c_ref.residues if r.res_seq == res_seq and r.i_code == i_code),
+            None,
+        )
+        r_mob = next(
+            (r for r in c_mob.residues if r.res_seq == res_seq and r.i_code == i_code),
+            None,
+        )
+        if r_ref and r_mob and has_atom(r_ref, atom_name) and has_atom(r_mob, atom_name):
+            filtered.append((res_seq, i_code, res_name))
+    return filtered
+
 
 def find_overlapping_residues(
     protein1: ProteinStructure,

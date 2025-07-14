@@ -35,3 +35,21 @@ __all__ = [
     "compute_tmscore_pytorch",
     "compute_tmscore_jax",
 ]
+
+import numpy as _np
+import torch as _torch
+
+
+def rmsd(P, Q):
+    """
+    Convenience dispatcher that chooses NumPy / PyTorch / JAX implementation
+    based on input types.
+    """
+    if isinstance(P, _np.ndarray):
+        return compute_rmsd_numpy(P, Q)
+    if isinstance(P, _torch.Tensor):
+        return compute_rmsd_pytorch(P, Q)
+    return compute_rmsd_jax(P, Q)  # falls back to JAX
+
+
+__all__.extend(["rmsd"])
