@@ -1,8 +1,9 @@
 # protein_design_tools/core/protein_structure.py
 
-import numpy as np
+from __future__ import annotations
+from typing import ClassVar, Callable, Dict, List, Optional, Union
 from dataclasses import dataclass, field
-from typing import Optional, Union, Dict, List, Callable  # <-- add Callable here!
+import numpy as np
 
 from .chain import Chain
 from .residue import Residue
@@ -13,7 +14,7 @@ from ..utils.helpers import parse_residue_selection
 class ProteinStructure:
     """Represents a protein structure and its components."""
 
-    STANDARD_RESIDUES: set[str] = {
+    STANDARD_RESIDUES: ClassVar[set[str]] = {
         "ALA",
         "ARG",
         "ASN",
@@ -253,3 +254,8 @@ class ProteinStructure:
             "VAL",
         }
         self.remove_residues_if(lambda r: r.name not in standard_aa)
+
+    def sort_residues(self) -> None:
+        """Ensure every chain’s residue list is ordered by (res_seq, i_code)."""
+        for ch in self.chains:
+            ch.residues.sort(key=lambda r: (r.res_seq, r.i_code))

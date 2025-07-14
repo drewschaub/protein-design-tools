@@ -86,35 +86,44 @@ def write_structure(
     include_hydrogens: bool = False,
     include_hetatm: bool = True,
 ) -> None:
-    """
-    Dump *structure* to PDB.  By default hydrogens are dropped and only ATOM
-    records are written.
-    """
+    """Write *structure* to PDB (ATOM / HETATM only)."""
 
-    def _format_atom(rec, serial):
-        altloc = " " if rec.alt_loc in (".", "?", "") else rec.alt_loc
-        icode = " " if rec.i_code in (".", "?", "") else rec.i_code
-        return (
-            f"{rec.record:<6}{serial:5d} "
-            f"{rec.name:^4}{altloc}"
-            f"{rec.residue.name:>3} {rec.chain_id:1}"
-            f"{rec.residue.res_seq:>4}{icode}   "
-            f"{rec.x:8.3f}{rec.y:8.3f}{rec.z:8.3f}"
-            f"{rec.occupancy:6.2f}{rec.temp_factor:6.2f}          "
-            f"{rec.element:>2}\n"
+    def _format_atom(atom, residue, chain_id, serial):
+        # graceful fall-backs for optional fields
+        altloc = " " if atom.alt_loc in (".", "?", "") else atom.alt_loc
+        icode = " " if residue.i_code in (".", "?", "") else residue.i_code
+        occup = getattr(atom, "occupancy", 1.00)
+        bfac = getattr(atom, "temp_factor", 0.00)
+        element = (atom.element or atom.name[0]).rjust(2)
+
+        record = (
+            "HETATM"
+            if residue.name not in ProteinStructure.STANDARD_RESIDUES
+            else "ATOM"
         )
 
-    serial = 1
-    lines = []
-    for ch in structure.chains:
-        for res in ch.residues:
-            is_het = res.name not in ProteinStructure.STANDARD_RESIDUES
-            if is_het and not include_hetatm:
+        return (
+            f"{record:<6}{serial:5d} "
+            f"{atom.name:^4}{altloc}"
+            f"{residue.name:>3} {chain_id:1}"
+            f"{residue.res_seq:4d}{icode}   "
+            f"{atom.x:8.3f}{atom.y:8.3f}{atom.z:8.3f}"
+            f"{occup:6.2f}{bfac:6.2f}          "
+            f"{element:>2}\n"
+        )
+
+    lines, serial = [], 1
+    for chain in structure.chains:
+        for res in chain.residues:
+            if (
+                res.name not in ProteinStructure.STANDARD_RESIDUES
+                and not include_hetatm
+            ):
                 continue
             for at in res.atoms:
                 if at.element.upper() == "H" and not include_hydrogens:
                     continue
-                lines.append(_format_atom(at, serial))
+                lines.append(_format_atom(at, res, chain.name, serial))
                 serial += 1
 
-    Path(file_path).write_text("".join(lines))
+    Path(file_path).write_text("".join(lines) + "END\n")
