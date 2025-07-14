@@ -66,42 +66,58 @@ Calculate structural metrics across multiple computational frameworks for flexib
 
 ## Installation
 
-Install the package via PyPI using `pip`:
+### 1. Choose the right requirements file
+
+To keep the repo platform-agnostic, dependencies are split into small files in  
+`requirements/`. Pick the one that matches your hardware/accelerator:
+
+| File | When to use it | Key extra deps |
+|------|----------------|----------------|
+| **`requirements/cpu.txt`**   | CPU-only | `jax[cpu]` |
+| **`requirements/cuda12.txt`**| NVIDIA GPU, CUDA 12 toolchain | `jax[cuda12]` (installs a CUDA-enabled `jaxlib` wheel) |
+| **`requirements/tpu.txt`**   | Google Cloud TPU VMs | `jax[tpu]` + `libtpu` link |
+
+All three files include `-r requirements/base.txt`, which lists NumPy 1.26,  
+PyTorch ( CPU wheel by default ), FreeSASA, etc.
+
+### 2. Create a virtual environment (recommended)
 
 ```bash
-pip install protein-design-tools
+python -m venv .venv
+source .venv/bin/activate         # macOS/Linux
+# .venv\Scripts\activate.bat      # Windows CMD
+# .\.venv\Scripts\Activate.ps1    # Windows PowerShell
 ```
-*Note: Ensure that you have Python 3.7 or higher installed.*
 
-### Core Dependencies
+### 3. Install
 
-Install the core dependencies using `pip`:
+CPU-only:
 
 ```bash
-pip install -e .
+pip install -r requirements/cpu.txt
 ```
 
-### Optional Dependencies
+NVIDIA GPU:
 
-Depending on your hardware, install the appropriate version of `jax`
-
-- CPU-only (Linux/macOS/Windows):
-
-```
-pip install -e .[jax_cpu]
+```bash
+pip install -r requirements/cuda12.txt
 ```
 
-- GPU Example:  (NVIDIA, CUDA 12):
+TPU VM:
 
-```
-pip install -e .[jax_cuda12]
+```bash
+pip install -r requirements/tpu.txt
 ```
 
-- TPU (Google Cloud TPU VM):
+### 4. Verify
 
+```python
+import numpy, torch, jax, jaxlib, freesasa
+print("NumPy:", numpy.__version__)
+print("Torch:", torch.__version__, "| CUDA:", torch.cuda.is_available())
+print("JAX :", jax.__version__,   "| jaxlib:", jaxlib.__version__)
 ```
-pip install -e .[jax_tpu]
-```
+
 
 ## Quick Start
 

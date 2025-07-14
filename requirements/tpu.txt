@@ -1,0 +1,3 @@
+# Base + TPU JAX
+-r base.txt
+jax[tpu]

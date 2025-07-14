@@ -1,0 +1,3 @@
+# Base + CPU JAX
+-r base.txt
+jax[cpu]==0.4.25
