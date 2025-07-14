@@ -55,9 +55,7 @@ def fetch_pdb(
 
 
 def read_pdb(
-    file_path: str,
-    chains: Optional[List[str]] = None,
-    name: Optional[str] = None
+    file_path: str, chains: Optional[List[str]] = None, name: Optional[str] = None
 ) -> ProteinStructure:
     """
     Read a local ``.pdb`` or ``.pdb.gz`` file (or file-like) into a
