@@ -55,7 +55,11 @@ def _superpose_kabsch(
         chain = next((c for c in struct.chains if c.name == chain_id), None)
         if chain is None:
             if debug:
-                print(f"[DEBUG] _coords_from_overlap: no chain {chain_id} in {struct.name}")
+                msg = (
+                    "[DEBUG] _coords_from_overlap: no chain "
+                    f"{chain_id} in {struct.name}"
+                )
+                print(msg)
             return np.empty((0, 3))
 
         pts = []
@@ -85,9 +89,12 @@ def _superpose_kabsch(
                 pts.append([atom.x, atom.y, atom.z])
 
         if debug and missing:
+            to_show = missing[:10]
+            more = "..." if len(missing) > 10 else ""
             print(
-                f"[DEBUG] _coords_from_overlap: Missing {atom_name} on residues "
-                f"{missing[:10]}{'...' if len(missing) > 10 else ''} ({len(missing)} total)"
+                "[DEBUG] _coords_from_overlap: Missing "
+                f"{atom_name} on residues {to_show}{more} "
+                f"({len(missing)} total)"
             )
 
         return np.asarray(pts, dtype=float)
@@ -108,9 +115,11 @@ def _superpose_kabsch(
 
     # need at least 3 matching points
     if coords_t.shape[0] < 3 or coords_m.shape[0] < 3:
-        raise ValueError(
-            f"Need ≥3 common {atom_type} atoms; found {coords_t.shape[0]} vs {coords_m.shape[0]}."
+        msg = (
+            f"Need ≥3 common {atom_type} atoms; found "
+            f"{coords_t.shape[0]} vs {coords_m.shape[0]}."
         )
+        raise ValueError(msg)
 
     # truncate to equal length
     n = min(len(coords_t), len(coords_m))
@@ -148,6 +157,7 @@ def _superpose_kabsch(
         # optional distance check after fit
         fit = (R @ Q.T).T + t
         from protein_design_tools.utils.analysis import debug_pair_table
+
         # labels not needed here, just distances
         debug_pair_table(P, fit, [(int(r[0]), int(r[2])) for r in overlapping_residues])
 

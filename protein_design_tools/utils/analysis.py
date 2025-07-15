@@ -234,7 +234,9 @@ def debug_pair_table(
                 match = "✓" if m_name == t_name else "✗"
         d = np.linalg.norm(np.array([x_t, y_t, z_t]) - np.array([x_m, y_m, z_m]))
         print(
-            f"{i:5d} | {res_seq:4d} {t_name:>3}   | {res_seq:4d} {m_name:>3}  |   {match}   | {d:8.3f}"
+            f"{i:5d} | {res_seq:4d} {t_name:>3}"
+            f"   | {res_seq:4d} {m_name:>3}"
+            f"  |   {match}   | {d:8.3f}"
         )
 
 

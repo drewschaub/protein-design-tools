@@ -92,6 +92,7 @@ def read_pdb(
 
     return _parse_pdb_content(content, chains, structure)
 
+
 def write_pdb(structure: ProteinStructure, filepath: str) -> None:
     """
     Write a ProteinStructure to a PDB file in strict fixed-width columns,
@@ -106,7 +107,7 @@ def write_pdb(structure: ProteinStructure, filepath: str) -> None:
         for chain in structure.chains:
             for res in chain.residues:
                 resname = res.name.lstrip(".")
-                i_code  = res.i_code if res.i_code not in (".","?") else " "
+                i_code = res.i_code if res.i_code not in (".", "?") else " "
                 for atom in res.atoms:
                     # handle atom name placement
                     name = atom.name
@@ -116,31 +117,31 @@ def write_pdb(structure: ProteinStructure, filepath: str) -> None:
                         # Blank in col13, name in cols14–16, left-justified
                         name_field = f" {name:<3s}"
 
-                    alt    = atom.alt_loc if atom.alt_loc not in (".","?") else " "
-                    occ    = getattr(atom, "occupancy",    1.00)
-                    tempf  = getattr(atom, "temp_factor",  0.00)
-                    elem   = getattr(atom, "element",      "").strip().rjust(2)
+                    alt = atom.alt_loc if atom.alt_loc not in (".", "?") else " "
+                    occ = getattr(atom, "occupancy", 1.00)
+                    tempf = getattr(atom, "temp_factor", 0.00)
+                    elem = getattr(atom, "element", "").strip().rjust(2)
 
                     line = (
-                        f"ATOM  "                              # cols 1-6
-                        f"{atom_serial:5d}"                    # cols 7-11
-                        f" "                                    # col 12
-                        f"{name_field}"                        # cols 13-16
-                        f"{alt}"                               # col 17
-                        f"{resname:>3s}"                       # cols 18-20
-                        f" "                                    # col 21
-                        f"{chain.name:1s}"                     # col 22
-                        f"{res.res_seq:4d}"                    # cols 23-26
-                        f"{i_code:1s}"                         # col 27
-                        f"   "                                 # cols 28-30
-                        f"{atom.x:8.3f}"                       # cols 31-38
-                        f"{atom.y:8.3f}"                       # cols 39-46
-                        f"{atom.z:8.3f}"                       # cols 47-54
-                        f"{occ:6.2f}"                          # cols 55-60
-                        f"{tempf:6.2f}"                        # cols 61-66
-                        f"          "                          # cols 67-76
-                        f"{elem}"                              # cols 77-78
-                        f"{atom.charge:>2s}"                   # cols 79-80
+                        f"ATOM  "  # cols 1-6
+                        f"{atom_serial:5d}"  # cols 7-11
+                        f" "  # col 12
+                        f"{name_field}"  # cols 13-16
+                        f"{alt}"  # col 17
+                        f"{resname:>3s}"  # cols 18-20
+                        f" "  # col 21
+                        f"{chain.name:1s}"  # col 22
+                        f"{res.res_seq:4d}"  # cols 23-26
+                        f"{i_code:1s}"  # col 27
+                        f"   "  # cols 28-30
+                        f"{atom.x:8.3f}"  # cols 31-38
+                        f"{atom.y:8.3f}"  # cols 39-46
+                        f"{atom.z:8.3f}"  # cols 47-54
+                        f"{occ:6.2f}"  # cols 55-60
+                        f"{tempf:6.2f}"  # cols 61-66
+                        f"          "  # cols 67-76
+                        f"{elem}"  # cols 77-78
+                        f"{atom.charge:>2s}"  # cols 79-80
                         f"\n"
                     )
                     out.write(line)
