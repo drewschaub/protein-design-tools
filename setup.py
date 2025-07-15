@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="protein-design-tools",
-    version="0.1.30",
+    version="0.1.31",
     description="A toolkit for protein structure analysis and design.",
     author="Andrew Schaub",
     author_email="andrew.schaub@protonmail.com",
