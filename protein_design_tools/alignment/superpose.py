@@ -18,14 +18,48 @@ def superpose_structures(
     """
     Superpose (align) the 'mobile' structure onto the 'target' structure using
     the specified alignment method (currently only 'kabsch'), optionally restricting
-    to a list of overlapping residues.
+    to a list of overlapping residues.  If no overlap list is provided, we simply
+    grab all atoms of the given type in chain 'A' and align them by index.
     """
-    if method.lower() == "kabsch":
-        return _superpose_kabsch(
-            mobile, target, atom_type, selection, overlapping_residues, debug=debug
-        )
-    else:
+    if method.lower() != "kabsch":
         raise ValueError(f"Unknown alignment method: {method}")
+
+    # if no explicit overlap, align all atoms of type `atom_type` by order
+    if overlapping_residues is None:
+        # grab Nx3 arrays of coordinates
+        coords_t = target.get_coordinates(atom_type=atom_type)
+        coords_m = mobile.get_coordinates(atom_type=atom_type)
+        if coords_t.shape[0] < 3 or coords_m.shape[0] < 3:
+            raise ValueError(
+                f"Need ≥3 {atom_type} atoms to align; found "
+                f"{coords_t.shape[0]} vs {coords_m.shape[0]}"
+            )
+        # truncate to same length
+        n = min(len(coords_t), len(coords_m))
+        P = coords_t[:n]
+        Q = coords_m[:n]
+
+        # standard Kabsch
+        cP = P.mean(axis=0)
+        cQ = Q.mean(axis=0)
+        X = P - cP
+        Y = Q - cQ
+        H = Y.T @ X
+        U, S, Vt = np.linalg.svd(H)
+        R = Vt.T @ U.T
+        if np.linalg.det(R) < 0:
+            Vt[-1, :] *= -1
+            R = Vt.T @ U.T
+        t = cP - R @ cQ
+
+        M = np.eye(4, dtype=float)
+        M[:3, :3] = R
+        M[:3, 3] = t
+        return M
+
+    # otherwise use the existing overlap-based routine
+    return _superpose_kabsch(mobile, target, atom_type, selection,
+                              overlapping_residues, debug=debug)
 
 
 def _superpose_kabsch(
