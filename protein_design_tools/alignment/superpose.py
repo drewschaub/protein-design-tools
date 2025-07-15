@@ -19,34 +19,10 @@ def superpose_structures(
     Superpose (align) the 'mobile' structure onto the 'target' structure using
     the specified alignment method (currently only 'kabsch'), optionally restricting
     to a list of overlapping residues.
-
-    Parameters
-    ----------
-    mobile, target : ProteinStructure
-        Structures to be aligned.
-    atom_type : str
-        Which atom type to use (e.g. "CA").
-    selection : Dict[str, ...], optional
-        Additional selection of residues.
-    method : str
-        Alignment method (only 'kabsch' supported).
-    overlapping_residues : List[Tuple[int, str, str]], optional
-        Overlapping residues for alignment, e.g. from find_overlapping_residues().
-
-    Returns
-    -------
-    transform_matrix : np.ndarray
-        A 4×4 homogeneous transformation matrix representing the rotation and
-        translation that superposes 'mobile' onto 'target'.
     """
     if method.lower() == "kabsch":
         return _superpose_kabsch(
-            mobile,
-            target,
-            atom_type,
-            selection,
-            overlapping_residues,
-            debug=debug,  #  👈 forward the flag
+            mobile, target, atom_type, selection, overlapping_residues, debug=debug
         )
     else:
         raise ValueError(f"Unknown alignment method: {method}")
@@ -61,44 +37,68 @@ def _superpose_kabsch(
     debug: bool = False,
 ) -> np.ndarray:
     """
-    Internal function: Perform Kabsch superposition of 'mobile' onto 'target' for
-    matching residues/atoms. Returns a 4x4 homogeneous transform.
+    Internal function: Perform Kabsch superposition of 'mobile' onto 'target'
+    for matching residues/atoms. Returns a 4×4 homogeneous transform.
     """
 
-    # Build coords from overlap list, skipping missing atoms
     def _coords_from_overlap(
         struct: ProteinStructure,
         chain_id: str,
-        overlap: list[tuple[int, str, str]],
+        overlap: List[Tuple[int, str, str]],
         atom_name: str,
-        debug: bool = False,   # new argument
+        debug: bool = False,
     ) -> np.ndarray:
-        # find the chain
+        """
+        Build an (N×3) array of atom_name coords for this struct,
+        using overlap tuples (ref_seq, i_code, mob_seq).
+        """
         chain = next((c for c in struct.chains if c.name == chain_id), None)
         if chain is None:
             if debug:
-                print(f"[DEBUG] _coords_from_overlap: Chain {chain_id} not found in {struct.name or struct}")
+                print(f"[DEBUG] _coords_from_overlap: no chain {chain_id} in {struct.name}")
             return np.empty((0, 3))
+
         pts = []
         missing = []
-        for res_seq, i_code, _ in overlap:
-            res = next((r for r in chain.residues if r.res_seq == res_seq and r.i_code == i_code), None)
+        for ref_seq, i_code, mob_seq in overlap:
+            # pick the right residue number:
+            # - for target struct, use ref_seq
+            # - for mobile struct, use mob_seq
+            want_seq = mob_seq if struct is mobile else ref_seq
+
+            # match insertion code if provided
+            res = next(
+                (
+                    r
+                    for r in chain.residues
+                    if r.res_seq == want_seq
+                    and (not i_code or (r.i_code or "") == i_code)
+                ),
+                None,
+            )
             if not res:
-                missing.append(res_seq)
+                missing.append(want_seq)
                 continue
+
             atom = next((a for a in res.atoms if a.name == atom_name), None)
             if atom:
                 pts.append([atom.x, atom.y, atom.z])
-        if debug and missing:
-            print(f"[DEBUG] _coords_from_overlap: Missing {atom_name} in residues {missing[:10]}{'...' if len(missing)>10 else ''} ({len(missing)} total)")
-        return np.asarray(pts)
 
+        if debug and missing:
+            print(
+                f"[DEBUG] _coords_from_overlap: Missing {atom_name} on residues "
+                f"{missing[:10]}{'...' if len(missing) > 10 else ''} ({len(missing)} total)"
+            )
+
+        return np.asarray(pts, dtype=float)
 
     if overlapping_residues is None:
         raise ValueError("Must supply overlapping_residues to _superpose_kabsch")
 
-    # get CA/backbone/etc coords in the same order for both structures
-    chain_id_ref = chain_id_mob = "A"  # or pull from function args if you generalize
+    # fixed chain IDs here; could be parameterized later
+    chain_id_ref = chain_id_mob = "A"
+
+    # build coordinate arrays
     coords_t = _coords_from_overlap(
         target, chain_id_ref, overlapping_residues, atom_type, debug=debug
     )
@@ -106,85 +106,70 @@ def _superpose_kabsch(
         mobile, chain_id_mob, overlapping_residues, atom_type, debug=debug
     )
 
-    # cutoff if too few
+    # need at least 3 matching points
     if coords_t.shape[0] < 3 or coords_m.shape[0] < 3:
         raise ValueError(
-            f"Need ≥3 common {atom_type} atoms; found "
-            f"{coords_t.shape[0]} vs {coords_m.shape[0]}."
+            f"Need ≥3 common {atom_type} atoms; found {coords_t.shape[0]} vs {coords_m.shape[0]}."
         )
 
-    # ensure same length
+    # truncate to equal length
     n = min(len(coords_t), len(coords_m))
-    coords_target = coords_t[:n]
-    coords_mobile = coords_m[:n]
+    P = coords_t[:n]
+    Q = coords_m[:n]
 
     if debug:
-        print(f"[DEBUG] {atom_type} overlap: {coords_target.shape[0]} atoms")
-        from protein_design_tools.utils.analysis import debug_pair_table
+        print(f"[DEBUG] {atom_type} overlap count: {P.shape[0]}")
 
-        labels = [(r[0], r[2]) for r in overlapping_residues]
-        debug_pair_table(coords_target, coords_mobile, labels)
+    # 1) centroids
+    cP = P.mean(axis=0)
+    cQ = Q.mean(axis=0)
 
-    # 1) Compute centroids
-    centroid_t = np.mean(coords_target, axis=0)
-    centroid_m = np.mean(coords_mobile, axis=0)
+    # 2) center
+    X = P - cP
+    Y = Q - cQ
 
-    # 2) Center
-    T = coords_target - centroid_t
-    M = coords_mobile - centroid_m
-
-    # 3) Covariance
-    H = M.T @ T
+    # 3) covariance
+    H = Y.T @ X
     U, S, Vt = np.linalg.svd(H)
-
     if debug:
         print(f"[DEBUG] SVD singular values: {S}")
 
-    # 4) Rotation
+    # 4) rotation
     R = Vt.T @ U.T
-
-    # 5) Reflection check
+    # 5) reflection check
     if np.linalg.det(R) < 0:
         Vt[-1, :] *= -1
         R = Vt.T @ U.T
 
-    # 6) Translation
-    t = centroid_t - (R @ centroid_m)
+    # 6) translation
+    t = cP - R @ cQ
 
     if debug:
-        # apply R & t to the mobile coords and show post‐fit distances
-        coords_m_fit = (R @ coords_mobile.T).T + t
-        print("[DEBUG] distances _after_ Kabsch:")
-        debug_pair_table(coords_target, coords_m_fit, labels)
+        # optional distance check after fit
+        fit = (R @ Q.T).T + t
+        from protein_design_tools.utils.analysis import debug_pair_table
+        # labels not needed here, just distances
+        debug_pair_table(P, fit, [(int(r[0]), int(r[2])) for r in overlapping_residues])
 
-    # 7) Build 4×4 transform
-    transform_matrix = np.eye(4)
-    transform_matrix[:3, :3] = R
-    transform_matrix[:3, 3] = t
+    # build 4×4 homogeneous transform
+    M = np.eye(4, dtype=float)
+    M[:3, :3] = R
+    M[:3, 3] = t
 
-    return transform_matrix
+    return M
 
 
 def apply_transform(structure: ProteinStructure, transform: np.ndarray) -> None:
     """
-    Apply a 4×4 homogeneous transformation matrix in-place to update the coordinates
-    of all atoms in the given ProteinStructure.
-
-    Parameters
-    ----------
-    structure : ProteinStructure
-        The protein structure to modify.
-    transform : np.ndarray
-        A 4×4 homogeneous rotation+translation matrix.
+    Apply a 4×4 homogeneous transformation matrix in-place to
+    update all atom coordinates in the given ProteinStructure.
     """
     if transform.shape != (4, 4):
-        raise ValueError("Expected a 4x4 homogeneous transformation matrix.")
+        raise ValueError("Expected a 4×4 homogeneous transform matrix.")
 
     for chain in structure.chains:
         for residue in chain.residues:
             for atom in residue.atoms:
-                hom_coords = np.array([atom.x, atom.y, atom.z, 1.0])
-                new_coords = transform @ hom_coords
-                atom.x = new_coords[0]
-                atom.y = new_coords[1]
-                atom.z = new_coords[2]
+                x, y, z = atom.x, atom.y, atom.z
+                new = transform @ np.array([x, y, z, 1.0])
+                atom.x, atom.y, atom.z = new[:3]

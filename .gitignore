@@ -122,3 +122,7 @@ cython_debug/
 
 # notebooks
 notebooks/
+rmsd_results.csv
+superpose_and_rmsd_batch.py
+
+protein-design-tools.tar.gz

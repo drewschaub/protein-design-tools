@@ -73,12 +73,8 @@ def _raw_overlap(
     hits = sorted(set1 & set2, key=lambda x: x[0])
     out: List[tuple[int, str, str]] = []
     for res_seq, _ in hits:
-        name = next(
-            r.name
-            for r in chain1.residues
-            if r.res_seq == res_seq
-        )
-        out.append((res_seq, '', name))
+        name = next(r.name for r in chain1.residues if r.res_seq == res_seq)
+        out.append((res_seq, "", name))
     return out
 
 
@@ -160,8 +156,13 @@ def filter_overlap_by_atom(
             (r for r in c_mob.residues if r.res_seq == res_seq),
             None,
         )
-        if r_ref and r_mob and has_atom(r_ref, atom_name) and has_atom(r_mob, atom_name):
-            ok.append((res_seq, '', res_name))
+        if (
+            r_ref
+            and r_mob
+            and has_atom(r_ref, atom_name)
+            and has_atom(r_mob, atom_name)
+        ):
+            ok.append((res_seq, "", res_name))
     return ok
 
 
@@ -219,7 +220,7 @@ def debug_pair_table(
     """
     title = "after Kabsch" if after else "before Kabsch"
     print(f"  idx | temp res   | model res  |  match? |   d(Å) ({title})")
-    print(  "  ----+------------+-----------+---------+-------------")
+    print("  ----+------------+-----------+---------+-------------")
     for i, ((x_t, y_t, z_t), (x_m, y_m, z_m)) in enumerate(zip(coords_t, coords_m)):
         res_seq, t_name = labels[i]
         # Try to find this residue in the model (by number only)
@@ -232,7 +233,10 @@ def debug_pair_table(
                 m_name = r.name
                 match = "✓" if m_name == t_name else "✗"
         d = np.linalg.norm(np.array([x_t, y_t, z_t]) - np.array([x_m, y_m, z_m]))
-        print(f"{i:5d} | {res_seq:4d} {t_name:>3s}   | {res_seq:4d} {m_name:>3s}  |   {match}   | {d:8.3f}")
+        print(
+            f"{i:5d} | {res_seq:4d} {t_name:>3}   | {res_seq:4d} {m_name:>3}  |   {match}   | {d:8.3f}"
+        )
+
 
 def align_sequences(seq_t: str, seq_m: str) -> dict[int, int]:
     """
@@ -245,25 +249,40 @@ def align_sequences(seq_t: str, seq_m: str) -> dict[int, int]:
     # fill
     for i in range(1, n + 1):
         for j in range(1, m + 1):
-            match = 1 if seq_t[i-1] == seq_m[j-1] else 0
-            dp[i][j] = max(dp[i-1][j-1] + match, dp[i-1][j], dp[i][j-1])
+            match = 1 if seq_t[i - 1] == seq_m[j - 1] else 0
+            dp[i][j] = max(dp[i - 1][j - 1] + match, dp[i - 1][j], dp[i][j - 1])
     # traceback
     aln_t, aln_m = [], []
     i, j = n, m
     while i > 0 or j > 0:
-        if i > 0 and j > 0 and dp[i][j] == dp[i-1][j-1] + (1 if seq_t[i-1]==seq_m[j-1] else 0):
-            aln_t.append(seq_t[i-1]); aln_m.append(seq_m[j-1]); i -= 1; j -= 1
-        elif i > 0 and dp[i][j] == dp[i-1][j]:
-            aln_t.append(seq_t[i-1]); aln_m.append('-'); i -= 1
+        if (
+            i > 0
+            and j > 0
+            and dp[i][j]
+            == dp[i - 1][j - 1] + (1 if seq_t[i - 1] == seq_m[j - 1] else 0)
+        ):
+            aln_t.append(seq_t[i - 1])
+            aln_m.append(seq_m[j - 1])
+            i -= 1
+            j -= 1
+        elif i > 0 and dp[i][j] == dp[i - 1][j]:
+            aln_t.append(seq_t[i - 1])
+            aln_m.append("-")
+            i -= 1
         else:
-            aln_t.append('-'); aln_m.append(seq_m[j-1]); j -= 1
-    aln_t = ''.join(reversed(aln_t))
-    aln_m = ''.join(reversed(aln_m))
+            aln_t.append("-")
+            aln_m.append(seq_m[j - 1])
+            j -= 1
+    aln_t = "".join(reversed(aln_t))
+    aln_m = "".join(reversed(aln_m))
     # build index map
     idx_map = {}
     it = im = 0
     for a_t, a_m in zip(aln_t, aln_m):
-        if a_t != '-': it += 1
-        if a_m != '-': im += 1
-        if a_t != '-' and a_m != '-': idx_map[it] = im
+        if a_t != "-":
+            it += 1
+        if a_m != "-":
+            im += 1
+        if a_t != "-" and a_m != "-":
+            idx_map[it] = im
     return idx_map
