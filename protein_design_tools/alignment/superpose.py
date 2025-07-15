@@ -58,8 +58,9 @@ def superpose_structures(
         return M
 
     # otherwise use the existing overlap-based routine
-    return _superpose_kabsch(mobile, target, atom_type, selection,
-                              overlapping_residues, debug=debug)
+    return _superpose_kabsch(
+        mobile, target, atom_type, selection, overlapping_residues, debug=debug
+    )
 
 
 def _superpose_kabsch(
