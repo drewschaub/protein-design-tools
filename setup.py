@@ -26,7 +26,7 @@ setup(
         "h5py",
         "numpy==1.26.4",
         "requests",
-        "torch"
+        "torch",
         "sphinx_rtd_theme",
         # Add other dependencies here
     ],
