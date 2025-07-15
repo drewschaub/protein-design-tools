@@ -24,7 +24,7 @@ setup(
     install_requires=[
         "freesasa",
         "h5py",
-        "numpy==1.26.4",
+        "numpy",
         "requests",
         "torch",
         "sphinx_rtd_theme",
@@ -32,7 +32,7 @@ setup(
     ],
     extras_require={
         "jax_cpu": [
-            "jax[cpu]==0.4.25",
+            "jax[cpu]",
         ],
         "jax_cuda12": [
             "jax[cuda12]",
