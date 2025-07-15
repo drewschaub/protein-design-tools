@@ -3,3 +3,4 @@ black
 build
 flake8
 pytest
+twine
