@@ -11,6 +11,7 @@ Public API
 fetch_cif(pdb_id, file_path=None, chains=None, name=None) -> ProteinStructure
 read_cif(file_path, chains=None, name=None)               -> ProteinStructure
 """
+
 from __future__ import annotations
 
 import gzip
