@@ -15,7 +15,6 @@ read_cif(file_path, chains=None, name=None)               -> ProteinStructure
 from __future__ import annotations
 
 import gzip
-import shlex
 from pathlib import Path
 from typing import List, Optional
 
@@ -124,6 +123,42 @@ def read_cif(
         content = file_path.read().splitlines()
 
     return _parse_cif_content(content, chains, structure)
+
+
+def _split_cif_line(line: str) -> List[str]:
+    """
+    Split one mmCIF data row into tokens using STAR quoting rules.
+
+    A ``'`` or ``"`` opens a quoted token only at the start of a token, and
+    closes it only when followed by whitespace or the end of the line.  So the
+    quoted ``"O5'"`` that RCSB writes and the bare ``O5'`` that ChimeraX writes
+    both yield ``O5'``.  (:func:`shlex.split` treats every ``'`` as a quote and
+    fails on the bare form with "No closing quotation".)  A ``#`` at the start
+    of a token begins a comment that runs to the end of the line.
+    """
+    tokens: List[str] = []
+    i, n = 0, len(line)
+    while i < n:
+        ch = line[i]
+        if ch.isspace():
+            i += 1
+        elif ch == "#":
+            break
+        elif ch in "'\"":
+            j = i + 1
+            while j < n:
+                if line[j] == ch and (j + 1 == n or line[j + 1].isspace()):
+                    break
+                j += 1
+            tokens.append(line[i + 1 : j])
+            i = j + 1
+        else:
+            j = i
+            while j < n and not line[j].isspace():
+                j += 1
+            tokens.append(line[i:j])
+            i = j
+    return tokens
 
 
 def _parse_cif_content(
@@ -260,7 +295,7 @@ def _parse_cif_content(
             # Consume data rows until the next category/loop_.
             i = j
             while i < n and not content[i].lstrip().startswith(("loop_", "_")):
-                raw = shlex.split(content[i].rstrip())
+                raw = _split_cif_line(content[i])
                 if len(raw) == len(field_names):  # well-formed row
                     _add_atom({k: raw[v] for k, v in idx.items()})
                 i += 1
