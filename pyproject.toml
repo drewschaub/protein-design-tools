@@ -1,5 +1,45 @@
 # pyproject.toml
 
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "protein-design-tools"
+version = "0.1.31"
+description = "A toolkit for protein structure analysis and design."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Andrew Schaub", email = "andrew.schaub@protonmail.com" }]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+# Only NumPy is required.  Everything else is an extra so that the pure-NumPy
+# metrics and the PDB/mmCIF readers never pull in PyTorch or JAX.  The install
+# hints in protein_design_tools/_optional.py name these extras.
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+torch = ["torch"]
+jax = ["jax"]
+jax_cuda12 = ["jax[cuda12]"]
+jax_tpu = ["jax[tpu]"]
+fetch = ["requests"]  # fetch_pdb / fetch_cif download from RCSB
+all = ["torch", "jax", "requests"]
+dev = ["pytest", "pytest-mock", "black", "flake8", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/drewschaub/protein-design-tools"
+
+[tool.setuptools.packages.find]
+include = ["protein_design_tools", "protein_design_tools.*"]
+
 [tool.black]
 line-length = 88
 target-version = ['py39', 'py310', 'py311']

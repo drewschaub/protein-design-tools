@@ -1,9 +1,10 @@
 # protein_design_tools/metrics/tmscore.py
 
+from __future__ import annotations
+
 import numpy as np
-import torch
-import jax.numpy as jnp
-from jax import jit
+
+from .._optional import jit, jnp, require_jax, require_torch, torch
 
 
 @jit
@@ -23,6 +24,7 @@ def compute_tmscore_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
     jnp.ndarray
         TM-score between P and Q
     """
+    require_jax()
     L_ref = P.shape[0]
     d0 = 1.24 * (L_ref - 15) ** (1 / 3) - 1.8
     d0 = jnp.maximum(d0, 1.0)  # Ensure d0 is positive
@@ -73,6 +75,7 @@ def compute_tmscore_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     torch.Tensor
         TM-score between P and Q
     """
+    require_torch()
     L_ref = P.shape[0]
     d0 = 1.24 * (L_ref - 15) ** (1 / 3) - 1.8
     d0 = torch.clamp(torch.tensor(d0), min=1.0).to(P.device)

@@ -66,58 +66,29 @@ Calculate structural metrics across multiple computational frameworks for flexib
 
 ## Installation
 
-### 1. Choose the right requirements file
+The core package needs only NumPy. PyTorch, JAX and `requests` are optional
+extras, so install just what you use:
 
-To keep the repo platform-agnostic, dependencies are split into small files in  
-`requirements/`. Pick the one that matches your hardware/accelerator:
+| Extra | What it enables | Install |
+|-------|-----------------|---------|
+| *(none)* | NumPy metrics (`compute_*_numpy`), PDB/mmCIF reading and writing, superposition | `pip install protein-design-tools` |
+| `fetch` | `fetch_pdb` / `fetch_cif` (download from RCSB) | `pip install "protein-design-tools[fetch]"` |
+| `torch` | `compute_*_pytorch` | `pip install "protein-design-tools[torch]"` |
+| `jax` | `compute_*_jax` on CPU | `pip install "protein-design-tools[jax]"` |
+| `jax_cuda12`, `jax_tpu` | JAX on an NVIDIA GPU / Cloud TPU | `pip install "protein-design-tools[jax_cuda12]"` |
+| `all` | every optional backend above | `pip install "protein-design-tools[all]"` |
 
-| File | When to use it | Key extra deps |
-|------|----------------|----------------|
-| **`requirements/cpu.txt`**   | CPU-only | `jax[cpu]` |
-| **`requirements/cuda12.txt`**| NVIDIA GPU, CUDA 12 toolchain | `jax[cuda12]` (installs a CUDA-enabled `jaxlib` wheel) |
-| **`requirements/tpu.txt`**   | Google Cloud TPU VMs | `jax[tpu]` + `libtpu` link |
+Calling a backend-specific function without its backend installed raises an
+`ImportError` that names the extra to install.
 
-All three files include `-r requirements/base.txt`, which lists NumPy 1.26,  
-PyTorch ( CPU wheel by default ), FreeSASA, etc.
-
-### 2. Create a virtual environment (recommended)
-
-```bash
-python -m venv .venv
-source .venv/bin/activate         # macOS/Linux
-# .venv\Scripts\activate.bat      # Windows CMD
-# .\.venv\Scripts\Activate.ps1    # Windows PowerShell
-```
-
-### 3. Install
-
-CPU-only:
+For a development checkout:
 
 ```bash
-pip install -r requirements/cpu.txt
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"        # core + pytest, pytest-mock, black, flake8
+pip install -e ".[dev,all]"    # ...plus every optional backend
+pytest
 ```
-
-NVIDIA GPU:
-
-```bash
-pip install -r requirements/cuda12.txt
-```
-
-TPU VM:
-
-```bash
-pip install -r requirements/tpu.txt
-```
-
-### 4. Verify
-
-```python
-import numpy, torch, jax, jaxlib, freesasa
-print("NumPy:", numpy.__version__)
-print("Torch:", torch.__version__, "| CUDA:", torch.cuda.is_available())
-print("JAX :", jax.__version__,   "| jaxlib:", jaxlib.__version__)
-```
-
 
 ## Quick Start
 

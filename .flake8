@@ -16,4 +16,3 @@ select = B,C,E,F,W,T4,B9
 # Per-file ignores (optional)
 per-file-ignores =
     tests/*: F401, E501
-    setup.py: F403

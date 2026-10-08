@@ -37,7 +37,8 @@ __all__ = [
 ]
 
 import numpy as _np
-import torch as _torch
+
+from .._optional import torch as _torch
 
 
 def rmsd(P, Q):
@@ -47,7 +48,7 @@ def rmsd(P, Q):
     """
     if isinstance(P, _np.ndarray):
         return compute_rmsd_numpy(P, Q)
-    if isinstance(P, _torch.Tensor):
+    if _torch is not None and isinstance(P, _torch.Tensor):
         return compute_rmsd_pytorch(P, Q)
     return compute_rmsd_jax(P, Q)  # falls back to JAX
 

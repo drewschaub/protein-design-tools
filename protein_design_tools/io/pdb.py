@@ -7,7 +7,7 @@ from ..core.protein_structure import ProteinStructure
 from ..core.chain import Chain
 from ..core.residue import Residue
 from ..core.atom import Atom
-import requests
+from .._optional import import_requests
 
 
 def fetch_pdb(
@@ -36,6 +36,7 @@ def fetch_pdb(
         The parsed protein structure.
 
     """
+    requests = import_requests()  # only fetch_* needs the network
     structure = ProteinStructure(name=name)
 
     url = f"https://files.rcsb.org/download/{pdb_id}.pdb"

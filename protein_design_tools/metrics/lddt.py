@@ -1,10 +1,10 @@
 # protein_design_tools/metrics/lddt.py
 
+from __future__ import annotations
+
 import numpy as np
-import torch
-import jax
-import jax.numpy as jnp
-from jax import jit
+
+from .._optional import jax, jit, jnp, require_jax, require_torch, torch
 
 
 @jit
@@ -26,6 +26,7 @@ def compute_lddt_jax(P: jnp.ndarray, Q: jnp.ndarray, cutoff=8.0) -> jnp.ndarray:
     jnp.ndarray
         Simplified LDDT score between P and Q (percentage)
     """
+    require_jax()
     N = P.shape[0]
 
     def compute_lddt_for_residue(i, acc):
@@ -105,6 +106,7 @@ def compute_lddt_pytorch(P: torch.Tensor, Q: torch.Tensor, cutoff=8.0) -> torch.
     torch.Tensor
         Simplified LDDT score between P and Q (percentage)
     """
+    require_torch()
     N = P.shape[0]
     lddt_scores = []
     for i in range(N):

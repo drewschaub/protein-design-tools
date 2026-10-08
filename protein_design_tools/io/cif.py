@@ -19,12 +19,11 @@ import shlex
 from pathlib import Path
 from typing import List, Optional
 
-import requests
-
 from ..core.protein_structure import ProteinStructure
 from ..core.chain import Chain
 from ..core.residue import Residue
 from ..core.atom import Atom
+from .._optional import import_requests
 
 
 def fetch_cif(
@@ -58,6 +57,7 @@ def fetch_cif(
       ``https://files.rcsb.org/download/{pdb_id}.cif``; no gzip wrapper.
     * For entries deposited *only* as gzip, we transparently gunzip in-memory.
     """
+    requests = import_requests()  # only fetch_* needs the network
     structure = ProteinStructure(name=name)
 
     base_url = f"https://files.rcsb.org/download/{pdb_id}"

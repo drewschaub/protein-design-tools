@@ -1,5 +1,8 @@
 # tests/io/test_pdb.py
 
+import sys
+from io import StringIO
+
 import pytest
 from pathlib import Path
 from protein_design_tools.io.pdb import read_pdb, fetch_pdb
@@ -90,6 +93,7 @@ def test_read_full_pdb(full_pdb_path):
 
 
 def test_fetch_pdb(mocker, small_pdb_content):
+    pytest.importorskip("requests")  # the `fetch` extra
     mocker.patch(
         "requests.get",
         return_value=mocker.Mock(status_code=200, text=small_pdb_content),
@@ -97,3 +101,15 @@ def test_fetch_pdb(mocker, small_pdb_content):
     structure = fetch_pdb("1NCG")
     assert len(structure.chains) == 1
     assert structure.chains[0].name == "A"
+
+
+def test_read_pdb_does_not_need_requests(monkeypatch, small_pdb_content):
+    monkeypatch.setitem(sys.modules, "requests", None)  # `import requests` fails
+    structure = read_pdb(StringIO(small_pdb_content))
+    assert len(structure.chains[0].residues) == 7
+
+
+def test_fetch_pdb_without_requests_names_the_extra(monkeypatch):
+    monkeypatch.setitem(sys.modules, "requests", None)
+    with pytest.raises(ImportError, match=r"protein-design-tools\[fetch\]"):
+        fetch_pdb("1NCG")

@@ -9,13 +9,15 @@ on:
     branches: [ main ]
 
 jobs:
+  # Core install only (NumPy, no optional backends).  This is the configuration
+  # the pure-NumPy metrics and the file readers must keep working in.
   build:
 
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v3
@@ -28,8 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e .
-        pip install pytest pytest-cov pytest-mock flake8 black
+        pip install -e ".[dev]" pytest-cov
 
     - name: Lint with Flake8
       run: |
@@ -58,3 +59,27 @@ jobs:
       uses: codecov/test-results-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Every optional backend installed (CPU wheels), so the PyTorch / JAX /
+  # requests tests actually run instead of being skipped.
+  optional-backends:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
+        pip install -e ".[dev,all]"
+
+    - name: Run Tests
+      run: |
+        pytest --verbose tests/

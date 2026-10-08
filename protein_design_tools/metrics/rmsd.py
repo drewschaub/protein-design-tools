@@ -1,9 +1,10 @@
 # protein_design_tools/metrics/rmsd.py
 
+from __future__ import annotations
+
 import numpy as np
-import torch
-import jax.numpy as jnp
-from jax import jit
+
+from .._optional import jit, jnp, require_jax, require_torch, torch
 
 
 @jit
@@ -23,6 +24,7 @@ def compute_rmsd_jax(P: jnp.ndarray, Q: jnp.ndarray) -> jnp.ndarray:
     jnp.ndarray
         RMSD between P and Q
     """
+    require_jax()
     assert P.shape == Q.shape
     return jnp.sqrt(jnp.mean(jnp.sum((P - Q) ** 2, axis=1)))
 
@@ -63,5 +65,6 @@ def compute_rmsd_pytorch(P: torch.Tensor, Q: torch.Tensor) -> torch.Tensor:
     float
         RMSD between P and Q
     """
+    require_torch()
     assert P.shape == Q.shape
     return torch.sqrt(torch.mean(torch.sum((P - Q) ** 2, dim=1)))

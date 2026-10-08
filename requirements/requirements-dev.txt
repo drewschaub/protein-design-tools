@@ -1,6 +1,0 @@
--r base.txt
-black
-build
-flake8
-pytest
-twine

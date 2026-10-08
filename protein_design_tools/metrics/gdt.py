@@ -1,9 +1,10 @@
 # protein_design_tools/metrics/gdt.py
 
+from __future__ import annotations
+
 import numpy as np
-import torch
-import jax.numpy as jnp
-from jax import jit
+
+from .._optional import jit, jnp, require_jax, require_torch, torch
 
 
 @jit
@@ -27,6 +28,7 @@ def compute_gdt_jax(
     jnp.ndarray
         GDT-TS score between P and Q
     """
+    require_jax()
     assert P.shape == Q.shape
     N = P.shape[0]
     distances = jnp.linalg.norm(P - Q, axis=1)
@@ -88,6 +90,7 @@ def compute_gdt_pytorch(
     torch.Tensor
         GDT-TS score between P and Q
     """
+    require_torch()
     N = P.shape[0]
     distances = torch.norm(P - Q, dim=1)
     percentages = []
