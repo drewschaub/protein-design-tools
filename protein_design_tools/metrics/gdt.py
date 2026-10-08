@@ -14,6 +14,10 @@ def compute_gdt_jax(
     """
     Compute GDT-TS between two NxD JAX arrays using JIT compilation.
 
+    Inputs must already be superposed and in 1:1 correspondence (row i of P
+    pairs with row i of Q); no alignment is performed here.  See
+    :mod:`protein_design_tools.alignment.superpose`.
+
     Parameters
     ----------
     P : jnp.ndarray
@@ -45,6 +49,10 @@ def compute_gdt_numpy(P: np.ndarray, Q: np.ndarray, thresholds=[1, 2, 4, 8]) -> 
     """
     Compute GDT-TS between two NxD NumPy arrays.
 
+    Inputs must already be superposed and in 1:1 correspondence (row i of P
+    pairs with row i of Q); no alignment is performed here.  See
+    :mod:`protein_design_tools.alignment.superpose`.
+
     Parameters
     ----------
     P : np.ndarray
@@ -75,6 +83,10 @@ def compute_gdt_pytorch(
 ) -> torch.Tensor:
     """
     Compute GDT-TS between two NxD PyTorch tensors.
+
+    Inputs must already be superposed and in 1:1 correspondence (row i of P
+    pairs with row i of Q); no alignment is performed here.  See
+    :mod:`protein_design_tools.alignment.superpose`.
 
     Parameters
     ----------

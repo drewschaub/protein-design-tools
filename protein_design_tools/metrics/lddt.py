@@ -12,6 +12,10 @@ def compute_lddt_jax(P: jnp.ndarray, Q: jnp.ndarray, cutoff=8.0) -> jnp.ndarray:
     """
     Compute a simplified LDDT between two NxD JAX arrays using JIT compilation.
 
+    Inputs must be in 1:1 correspondence (row i of P pairs with row i of Q);
+    no alignment is performed here.  lDDT compares intra-structure distances,
+    so P and Q do not need to be superposed.
+
     Parameters
     ----------
     P : jnp.ndarray
@@ -52,6 +56,10 @@ def compute_lddt_numpy(P: np.ndarray, Q: np.ndarray, cutoff=8.0) -> float:
     """
     Compute a simplified LDDT between two NxD NumPy arrays.
 
+    Inputs must be in 1:1 correspondence (row i of P pairs with row i of Q);
+    no alignment is performed here.  lDDT compares intra-structure distances,
+    so P and Q do not need to be superposed.
+
     Parameters
     ----------
     P : np.ndarray
@@ -91,6 +99,10 @@ def compute_lddt_numpy(P: np.ndarray, Q: np.ndarray, cutoff=8.0) -> float:
 def compute_lddt_pytorch(P: torch.Tensor, Q: torch.Tensor, cutoff=8.0) -> torch.Tensor:
     """
     Compute a simplified LDDT between two NxD PyTorch tensors.
+
+    Inputs must be in 1:1 correspondence (row i of P pairs with row i of Q);
+    no alignment is performed here.  lDDT compares intra-structure distances,
+    so P and Q do not need to be superposed.
 
     Parameters
     ----------

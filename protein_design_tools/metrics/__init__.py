@@ -45,6 +45,9 @@ def rmsd(P, Q):
     """
     Convenience dispatcher that chooses NumPy / PyTorch / JAX implementation
     based on input types.
+
+    Inputs must already be superposed and in 1:1 correspondence; see
+    :mod:`protein_design_tools.alignment.superpose`.
     """
     if isinstance(P, _np.ndarray):
         return compute_rmsd_numpy(P, Q)
