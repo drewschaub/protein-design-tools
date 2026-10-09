@@ -76,6 +76,7 @@ extras, so install just what you use:
 | `torch` | `compute_*_pytorch` | `pip install "protein-design-tools[torch]"` |
 | `jax` | `compute_*_jax` on CPU | `pip install "protein-design-tools[jax]"` |
 | `jax_cuda12`, `jax_tpu` | JAX on an NVIDIA GPU / Cloud TPU | `pip install "protein-design-tools[jax_cuda12]"` |
+| `fast` | numba-compiled dynamic programming in TM-align (identical results, much faster) | `pip install "protein-design-tools[fast]"` |
 | `all` | every optional backend above | `pip install "protein-design-tools[all]"` |
 
 Calling a backend-specific function without its backend installed raises an

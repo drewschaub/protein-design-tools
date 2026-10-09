@@ -31,7 +31,8 @@ jax = ["jax"]
 jax_cuda12 = ["jax[cuda12]"]
 jax_tpu = ["jax[tpu]"]
 fetch = ["requests"]  # fetch_pdb / fetch_cif download from RCSB
-all = ["torch", "jax", "requests"]
+fast = ["numba"]  # compiles TM-align's dynamic programming; same results
+all = ["torch", "jax", "requests", "numba"]
 dev = ["pytest", "pytest-mock", "black", "flake8", "build", "twine"]
 
 [project.urls]

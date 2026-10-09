@@ -139,3 +139,25 @@ def test_batched_superposition_search_matches_the_loop():
                 assert score == pytest.approx(score_l, abs=1e-12)
                 np.testing.assert_allclose(R, R_l, atol=1e-9)
                 np.testing.assert_allclose(t, t_l, atol=1e-9)
+
+
+def test_compiled_dp_matches_the_python_loop():
+    from protein_design_tools._optional import numba
+    from protein_design_tools.alignment.tmalign import (
+        _nwdp_arrays,
+        _nwdp_jit,
+        _nwdp_python,
+    )
+
+    rng = np.random.default_rng(5)
+    cases = [rng.random((40, 37)), rng.random((7, 90))]
+    cases.append(
+        (rng.random((50, 50)) < 0.3).astype(float)
+    )  # 0/1 scores: ties everywhere
+    for score in cases:
+        for gap in (-0.6, 0.0, -1.0):
+            expected = _nwdp_python(score, gap)
+            assert np.array_equal(_nwdp_arrays(score, gap), expected)
+            if numba is not None:
+                assert _nwdp_jit is not None
+                assert np.array_equal(_nwdp_jit(score, gap), expected)

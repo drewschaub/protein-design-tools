@@ -35,6 +35,14 @@ except ImportError:
         return fun
 
 
+# numba is an accelerator, not a backend: code that uses it must give the same
+# answers without it, so there is no require_numba(); callers test for None.
+try:
+    import numba
+except ImportError:
+    numba = None
+
+
 def require_torch() -> None:
     """Raise an ImportError naming the ``torch`` extra if PyTorch is missing."""
     if torch is None:

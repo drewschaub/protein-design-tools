@@ -44,6 +44,7 @@ from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from .._optional import numba
 from ..core.geometry import kabsch
 
 #: Residue pairs closer than this (after superposition) are marked ':' in
@@ -161,14 +162,14 @@ def secondary_structure(x: np.ndarray) -> np.ndarray:
 # --------------------------------------------------------------------------- #
 
 
-def _nwdp(score: np.ndarray, gap_open: float) -> np.ndarray:
+def _nwdp_python(score: np.ndarray, gap_open: float) -> np.ndarray:
     """
     TM-align's Needleman-Wunsch variant on a ``(xlen, ylen)`` score matrix.
 
     A gap costs ``gap_open`` only when it follows an aligned pair (the
     reference's ``path`` rule), there is no extension cost and end gaps are
     free.  Returns ``y2x``: for every residue j of y the index of its partner
-    in x, or -1.  Pure Python inner loop; rows cannot be vectorised exactly
+    in x, or -1.  Pure Python over lists; rows cannot be vectorised exactly
     because the gap charge depends on the previous cell's state.
     """
     len1, len2 = score.shape
@@ -207,6 +208,62 @@ def _nwdp(score: np.ndarray, gap_open: float) -> np.ndarray:
             else:
                 i -= 1
     return y2x
+
+
+def _nwdp_arrays(score, gap_open):
+    """
+    The same recurrence as :func:`_nwdp_python` written over NumPy arrays so
+    that numba can compile it; identical results.  Slower than the list
+    version when interpreted, so it is only used compiled.
+    """
+    len1, len2 = score.shape
+    val = np.zeros((len1 + 1, len2 + 1))
+    path = np.zeros((len1 + 1, len2 + 1), dtype=np.bool_)
+    for i in range(1, len1 + 1):
+        for j in range(1, len2 + 1):
+            d = val[i - 1, j - 1] + score[i - 1, j - 1]
+            h = val[i - 1, j]
+            if path[i - 1, j]:
+                h += gap_open
+            v = val[i, j - 1]
+            if path[i, j - 1]:
+                v += gap_open
+            if d >= h and d >= v:
+                path[i, j] = True
+                val[i, j] = d
+            else:
+                val[i, j] = v if v >= h else h
+    y2x = np.full(len2, -1, dtype=np.int64)
+    i, j = len1, len2
+    while i > 0 and j > 0:
+        if path[i, j]:
+            y2x[j - 1] = i - 1
+            i -= 1
+            j -= 1
+        else:
+            h = val[i - 1, j]
+            if path[i - 1, j]:
+                h += gap_open
+            v = val[i, j - 1]
+            if path[i, j - 1]:
+                v += gap_open
+            if v >= h:
+                j -= 1
+            else:
+                i -= 1
+    return y2x
+
+
+#: Compiled DP when numba is installed (the ``fast`` extra), else None.
+_nwdp_jit = None if numba is None else numba.njit(cache=True)(_nwdp_arrays)
+
+
+def _nwdp(score: np.ndarray, gap_open: float) -> np.ndarray:
+    """Dynamic programming step: the compiled kernel when numba is available,
+    otherwise the pure-Python loop.  Same answers either way."""
+    if _nwdp_jit is not None:
+        return _nwdp_jit(np.ascontiguousarray(score, dtype=np.float64), float(gap_open))
+    return _nwdp_python(score, gap_open)
 
 
 def _nwdp_coordinates(
