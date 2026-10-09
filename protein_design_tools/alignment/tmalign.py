@@ -90,9 +90,13 @@ def _transform(x: np.ndarray, R: np.ndarray, t: np.ndarray) -> np.ndarray:
 
 
 def _sqdist_matrix(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """Squared distances between every row of x and every row of y."""
-    diff = x[:, None, :] - y[None, :, :]
-    return np.einsum("ijk,ijk->ij", diff, diff)
+    """
+    Squared distances between every row of x and every row of y, via
+    ``|x|^2 + |y|^2 - 2 x.y`` (BLAS) rather than explicit differences; the two
+    agree to ~1e-12 A^2, far below any decision threshold in the search.
+    """
+    d = (x * x).sum(axis=1)[:, None] + (y * y).sum(axis=1)[None, :] - 2.0 * (x @ y.T)
+    return np.maximum(d, 0.0)
 
 
 def _sqdist_rows(x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -244,18 +248,8 @@ def _score_fun8(xt, ytm, d, Lnorm, score_d8, d0, score_sum_method):
     return i_ali, float(score_sum / Lnorm)
 
 
-def _tmscore8_search(
-    xtm, ytm, simplify_step, score_sum_method, local_d0_search, Lnorm, score_d8, d0
-):
-    """
-    Superposition maximising the TM-score of pre-paired points ``xtm`` ->
-    ``ytm``: start from every fragment of length L, L/2, ..., 4 (stepping
-    ``simplify_step`` residues), fit it, keep the pairs within a cut-off,
-    refit, and iterate (at most 20 times).  Returns the best score and its
-    rotation and translation.
-    """
-    Lali = len(xtm)
-    n_it = 20
+def _fragment_lengths(Lali: int) -> List[int]:
+    """Fragment ladder L, L/2, L/4, ... down to 4 (at most six lengths)."""
     L_ini_min = min(4, Lali)
     L_ini: List[int] = []
     for k in range(5):
@@ -266,6 +260,33 @@ def _tmscore8_search(
         L_ini.append(L)
     else:
         L_ini.append(L_ini_min)
+    return L_ini
+
+
+def _fragment_starts(Lali: int, L_frag: int, simplify_step: int) -> np.ndarray:
+    """Start positions the reference visits: every ``simplify_step`` residues,
+    plus the last possible start so that no fragment is missed."""
+    iL_max = Lali - L_frag
+    starts = np.arange(0, iL_max + 1, simplify_step)
+    if starts[-1] != iL_max:
+        starts = np.append(starts, iL_max)
+    return starts
+
+
+def _tmscore8_search_loop(
+    xtm, ytm, simplify_step, score_sum_method, local_d0_search, Lnorm, score_d8, d0
+):
+    """
+    One-fit-at-a-time form of :func:`_tmscore8_search`, kept because it reads
+    like the algorithm and the batched version is tested against it: start
+    from every fragment of length L, L/2, ..., 4 (stepping ``simplify_step``
+    residues), fit it, keep the pairs within a cut-off, refit, and iterate
+    (at most 20 times).  Returns the best score and its rotation and
+    translation.
+    """
+    Lali = len(xtm)
+    n_it = 20
+    L_ini = _fragment_lengths(Lali)
 
     score_max = -1.0
     R0 = np.eye(3)
@@ -300,6 +321,130 @@ def _tmscore8_search(
                 i = min(i + simplify_step, iL_max)
             else:
                 break
+    return score_max, R0, t0
+
+
+def _kabsch_batched(xw, yw, w):
+    """
+    Weighted Kabsch for a batch: rotations ``(W, 3, 3)`` and translations
+    ``(W, 3)`` superposing ``xw[k]`` onto ``yw[k]`` over the points whose 0/1
+    weight ``w[k]`` is one (the same arithmetic as :func:`kabsch`).  A row
+    with no points gives some rotation and a zero translation; callers mask
+    such rows out.
+    """
+    n = w.sum(axis=1)
+    n = np.where(n > 0, n, 1.0)[:, None]
+    wx = w[:, None, :]
+    cx = (wx @ xw)[:, 0, :] / n
+    cy = (wx @ yw)[:, 0, :] / n
+    xc = (xw - cx[:, None, :]) * w[:, :, None]
+    yc = yw - cy[:, None, :]
+    H = np.transpose(xc, (0, 2, 1)) @ yc
+    U, _, Vt = np.linalg.svd(H)
+    VtT = np.transpose(Vt, (0, 2, 1))
+    UT = np.transpose(U, (0, 2, 1))
+    d = np.sign(np.linalg.det(VtT @ UT))
+    d[d == 0] = 1.0
+    VtT[:, :, 2] *= d[:, None]  # Vt.T @ diag(1, 1, d)
+    R = VtT @ UT
+    t = cy - (R @ cx[:, :, None])[:, :, 0]
+    return R, t
+
+
+def _sqdist_batched(xtm, ytm, R, t):
+    """Squared distances ``(W, L)`` after moving ``xtm`` by each ``(R, t)``."""
+    xt = xtm @ np.transpose(R, (0, 2, 1)) + t[:, None, :]
+    diff = xt - ytm
+    return (diff * diff).sum(axis=2)
+
+
+def _score_fun8_batched(di, d, Lnorm, score_d8, d0, score_sum_method, live=None):
+    """:func:`_score_fun8` for a batch of squared-distance rows ``(W, L)``;
+    only rows flagged ``live`` have their cut-off relaxed."""
+    W, n_ali = di.shape
+    d_tmp = np.full(W, d * d)
+    mask = di < d_tmp[:, None]
+    if n_ali > 3:
+        inc = np.zeros(W)
+        short = mask.sum(axis=1) < 3
+        if live is not None:
+            short &= live
+        while short.any():
+            inc[short] += 1
+            d_tmp[short] = (d + inc[short] * 0.5) ** 2
+            mask[short] = di[short] < d_tmp[short, None]
+            short = (mask.sum(axis=1) < 3) & short
+    terms = 1.0 / (1.0 + di / (d0 * d0))
+    if score_sum_method == 8:
+        terms = np.where(di <= score_d8 * score_d8, terms, 0.0)
+    return mask, terms.sum(axis=1) / Lnorm
+
+
+def _tmscore8_search(
+    xtm,
+    ytm,
+    simplify_step,
+    score_sum_method,
+    local_d0_search,
+    Lnorm,
+    score_d8,
+    d0,
+    chunk=256,
+):
+    """
+    Superposition maximising the TM-score of pre-paired points ``xtm`` ->
+    ``ytm`` (the TM-score program's search): start from every fragment of
+    length L, L/2, ..., 4 (stepping ``simplify_step`` residues), fit it, keep
+    the pairs within a cut-off, refit, and iterate (at most 20 times).
+    Returns the best score and its rotation and translation.
+
+    All fragments of one length are fitted together (one stacked SVD) and
+    refined in lockstep with per-fragment 0/1 weights, which is where the
+    time goes.  The winner is the first maximum in the order the
+    one-at-a-time version visits, so the result matches
+    :func:`_tmscore8_search_loop`.  ``chunk`` bounds how many fragments are
+    in flight at once.
+    """
+    Lali = len(xtm)
+    n_it = 20
+    cols = np.arange(Lali)[None, :]
+    score_max, R0, t0 = -1.0, np.eye(3), np.zeros(3)
+    for L_frag in _fragment_lengths(Lali):
+        starts = _fragment_starts(Lali, L_frag, simplify_step)
+        for c0 in range(0, len(starts), chunk):
+            s = starts[c0 : c0 + chunk]
+            W = len(s)
+            xw = np.broadcast_to(xtm, (W, Lali, 3))
+            yw = np.broadcast_to(ytm, (W, Lali, 3))
+            w = ((cols >= s[:, None]) & (cols < (s + L_frag)[:, None])).astype(float)
+            scores = np.full((W, n_it + 1), -np.inf)
+            Rs = np.empty((n_it + 1, W, 3, 3))
+            ts = np.empty((n_it + 1, W, 3))
+            R, t = _kabsch_batched(xw, yw, w)
+            di = _sqdist_batched(xtm, ytm, R, t)
+            mask, score = _score_fun8_batched(
+                di, local_d0_search - 1, Lnorm, score_d8, d0, score_sum_method
+            )
+            scores[:, 0], Rs[0], ts[0] = score, R, t
+            live = mask.any(axis=1)
+            for it in range(1, n_it + 1):
+                if not live.any():
+                    break
+                k_mask = mask
+                R, t = _kabsch_batched(xw, yw, k_mask.astype(float))
+                di = _sqdist_batched(xtm, ytm, R, t)
+                new_mask, score = _score_fun8_batched(
+                    di, local_d0_search + 1, Lnorm, score_d8, d0, score_sum_method, live
+                )
+                scores[live, it] = score[live]
+                Rs[it], ts[it] = R, t
+                converged = (new_mask == k_mask).all(axis=1)
+                mask = np.where(live[:, None], new_mask, k_mask)
+                live &= ~converged & new_mask.any(axis=1)
+            best = int(np.argmax(scores))  # first maximum in visiting order
+            wi, iti = divmod(best, n_it + 1)
+            if scores[wi, iti] > score_max:
+                score_max, R0, t0 = float(scores[wi, iti]), Rs[iti, wi], ts[iti, wi]
     return score_max, R0, t0
 
 

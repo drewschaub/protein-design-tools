@@ -115,3 +115,27 @@ def test_correspond_by_structure():
     assert c.pairs == expected
     assert c.score == pytest.approx(case["tm_norm_y"], abs=1e-4)
     assert c.alignments[("A", "A")] == (case["aligned_x"], case["aligned_y"])
+
+
+def test_batched_superposition_search_matches_the_loop():
+    from protein_design_tools.alignment.tmalign import (
+        _parameters_for_search,
+        _tmscore8_search,
+        _tmscore8_search_loop,
+    )
+
+    rng = np.random.default_rng(3)
+    for n in (4, 5, 23, 64, 97):
+        P = rng.uniform(-20, 20, size=(n, 3))
+        q, _ = np.linalg.qr(rng.normal(size=(3, 3)))
+        Q = P @ q.T + rng.normal(scale=1.5, size=P.shape)
+        Q[::4] += rng.normal(scale=12.0, size=Q[::4].shape)  # some pairs far off
+        _, Lnorm, score_d8, d0, d0_search, _ = _parameters_for_search(n + 7, n)
+        for step in (1, 40):
+            for method in (0, 8):
+                args = (step, method, d0_search, Lnorm, score_d8, d0)
+                score, R, t = _tmscore8_search(P, Q, *args)
+                score_l, R_l, t_l = _tmscore8_search_loop(P, Q, *args)
+                assert score == pytest.approx(score_l, abs=1e-12)
+                np.testing.assert_allclose(R, R_l, atol=1e-9)
+                np.testing.assert_allclose(t, t_l, atol=1e-9)
