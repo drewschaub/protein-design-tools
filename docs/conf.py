@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.abspath(".."))
@@ -17,7 +18,9 @@ import sphinx.ext.autodoc
 project = "protein-design-tools"
 copyright = "2024, Andrew Schaub"
 author = "Andrew Schaub"
-release = "0.1.28"
+# Single source of truth for the version is pyproject.toml.
+with open(os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")) as _f:
+    release = re.search(r'^version = "([^"]+)"', _f.read(), re.MULTILINE).group(1)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

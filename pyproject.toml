@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "protein-design-tools"
-version = "0.1.31"
+version = "0.2.0"
 description = "A toolkit for protein structure analysis and design."
 readme = "README.md"
 license = "MIT"
