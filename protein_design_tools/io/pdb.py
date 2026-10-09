@@ -128,7 +128,7 @@ def write_pdb(structure: ProteinStructure, filepath: str) -> None:
                         f"{atom_serial:5d}"  # cols 7-11
                         f" "  # col 12
                         f"{name_field}"  # cols 13-16
-                        f"{alt}"  # col 17
+                        f"{alt:1s}"  # col 17
                         f"{resname:>3s}"  # cols 18-20
                         f" "  # col 21
                         f"{chain.name:1s}"  # col 22

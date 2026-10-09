@@ -113,3 +113,27 @@ def test_fetch_pdb_without_requests_names_the_extra(monkeypatch):
     monkeypatch.setitem(sys.modules, "requests", None)
     with pytest.raises(ImportError, match=r"protein-design-tools\[fetch\]"):
         fetch_pdb("1NCG")
+
+
+def test_write_pdb_round_trip_with_empty_alt_loc_and_i_code(tmp_path):
+    # the alt-loc column used to collapse to zero width when empty, shifting
+    # every later column (chain ID, numbering, coordinates) one place left
+    from protein_design_tools.io.pdb import write_pdb
+    from protein_design_tools.core.chain import Chain
+    from protein_design_tools.core.protein_structure import ProteinStructure
+    from protein_design_tools.core.residue import Residue
+    from protein_design_tools.core.atom import Atom
+
+    residue = Residue(name="GLY", res_seq=7, i_code="")
+    residue.atoms.append(
+        Atom(1, "CA", "", -12.345, 101.5, -0.001, 1.0, 20.0, "", "C", "")
+    )
+    structure = ProteinStructure(chains=[Chain(name="B", residues=[residue])])
+    path = tmp_path / "out.pdb"
+    write_pdb(structure, path)
+    line = path.read_text().splitlines()[0]
+    assert line[21] == "B" and line[16] == " " and line[26] == " "
+    back = read_pdb(path)
+    atom = back.chains[0].residues[0].atoms[0]
+    assert (back.chains[0].name, back.chains[0].residues[0].res_seq) == ("B", 7)
+    assert (atom.x, atom.y, atom.z) == (-12.345, 101.5, -0.001)
