@@ -20,6 +20,14 @@ protein\_design\_tools.alignment.superpose module
    :undoc-members:
    :show-inheritance:
 
+protein\_design\_tools.alignment.tmalign module
+-----------------------------------------------
+
+.. automodule:: protein_design_tools.alignment.tmalign
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

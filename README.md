@@ -108,6 +108,11 @@ print(rmsd(fit, ref, over="B"), tmscore(fit, ref, over="B"))
 # (BLOSUM62, affine gaps; pure NumPy, no Biopython).
 pairs = correspond(model, ref, chain_a="B", chain_b="B")
 print(rmsd(fit, ref, pairs=pairs))
+
+# Sequences too different to align?  Pair residues by structure instead
+# (TM-align, reimplemented in NumPy; Zhang & Skolnick, NAR 2005).
+pairs = correspond(model, ref, chain_a="B", chain_b="B", method="structure")
+print(pairs.score)                      # TM-score normalised by the reference chain
 ```
 
 Selections are `None` (everything), a chain ID, a list of chain IDs,

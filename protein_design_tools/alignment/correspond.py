@@ -27,6 +27,7 @@ from ..core.selection import (
     select,
 )
 from ._blosum62 import BLOSUM62, INDEX
+from .tmalign import tm_align
 
 #: ``(key_in_a, key_in_b)``
 Pair = Tuple[ResidueKey, ResidueKey]
@@ -166,7 +167,9 @@ class Correspondence:
     Iterating or ``len()`` gives the pairs; ``a`` and ``b`` are the two key
     lists; ``identity`` is the fraction of pairs with the same residue name.
     For ``method="sequence"``, ``alignments`` holds the gapped sequences per
-    chain pair and ``score`` the summed alignment score.
+    chain pair and ``score`` the summed alignment score; for
+    ``method="structure"`` they hold TM-align's gapped alignment and the
+    TM-score normalised by ``b``'s length.
     """
 
     pairs: List[Pair]
@@ -199,6 +202,7 @@ def correspond(
     gap_open: float = -10.0,
     gap_extend: float = -0.5,
     penalize_end_gaps: bool = False,
+    fast: bool = False,
 ) -> Correspondence:
     """
     Pair the residues of ``a`` with the residues of ``b``.
@@ -215,9 +219,14 @@ def correspond(
         BLOSUM62 and affine gaps (see :func:`needleman_wunsch`); survives point
         mutations and insertions/deletions.  ``"number"``: residues with the
         same number and insertion code.  ``"index"``: the i-th residue of one
-        chain with the i-th of the other.
+        chain with the i-th of the other.  ``"structure"``: TM-align on the
+        C-alpha traces (see :mod:`protein_design_tools.alignment.tmalign`),
+        which needs no sequence similarity at all.
     gap_open, gap_extend, penalize_end_gaps
         Passed to :func:`needleman_wunsch` for ``method="sequence"``.
+    fast : bool
+        For ``method="structure"``: TM-align's faster, slightly less thorough
+        search.
 
     Raises
     ------
@@ -226,9 +235,10 @@ def correspond(
     ValueError
         For an unknown ``method``.
     """
-    if method not in ("sequence", "number", "index"):
+    if method not in ("sequence", "structure", "number", "index"):
         raise ValueError(
-            f"unknown method {method!r}; expected 'sequence', 'number' or 'index'"
+            f"unknown method {method!r}; expected 'sequence', 'structure', "
+            "'number' or 'index'"
         )
     pairs: List[Pair] = []
     alignments: Dict[Tuple[str, str], Tuple[str, str]] = {}
@@ -251,6 +261,20 @@ def correspond(
                     )
                 ia += x != "-"
                 ib += y != "-"
+        elif method == "structure":
+            xa, ra = _ca_trace(ca)
+            xb, rb = _ca_trace(cb)
+            res = tm_align(
+                xa,
+                xb,
+                [r.one_letter_code or "X" for r in ra],
+                [r.one_letter_code or "X" for r in rb],
+                fast=fast,
+            )
+            alignments[(ca.name, cb.name)] = (res.aligned_x, res.aligned_y)
+            score += res.tm_norm_y
+            for i, j in res.pairs:
+                pairs.append((residue_key(ca.name, ra[i]), residue_key(cb.name, rb[j])))
         elif method == "number":
             by_number = {(r.res_seq, r.i_code or ""): r for r in cb.residues}
             for r in ca.residues:
@@ -268,7 +292,7 @@ def correspond(
         pairs=pairs,
         method=method,
         identity=identity,
-        score=score if method == "sequence" else None,
+        score=score if method in ("sequence", "structure") else None,
         alignments=alignments,
     )
 
@@ -354,3 +378,10 @@ def _chain_pairs(
 
 def _sequence(chain: Chain) -> str:
     return "".join(residue.one_letter_code or "X" for residue in chain.residues)
+
+
+def _ca_trace(chain: Chain):
+    """C-alpha coordinates of the residues that have one, and those residues."""
+    residues = [r for r in chain.residues if atom_coordinates(r, "CA") is not None]
+    coords = [atom_coordinates(r, "CA") for r in residues]
+    return np.array(coords, dtype=float).reshape(-1, 3), residues

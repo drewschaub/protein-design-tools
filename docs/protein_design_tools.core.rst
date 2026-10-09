@@ -20,6 +20,14 @@ protein\_design\_tools.core.chain module
    :undoc-members:
    :show-inheritance:
 
+protein\_design\_tools.core.geometry module
+-------------------------------------------
+
+.. automodule:: protein_design_tools.core.geometry
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 protein\_design\_tools.core.protein\_structure module
 -----------------------------------------------------
 

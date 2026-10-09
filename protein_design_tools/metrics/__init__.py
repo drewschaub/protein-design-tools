@@ -42,6 +42,7 @@ import numpy as _np
 
 from .._optional import torch as _torch
 from ..alignment.correspond import paired_coordinates as _paired_coordinates
+from ..alignment.tmalign import tm_superpose as _tm_superpose
 from ..core.protein_structure import ProteinStructure as _ProteinStructure
 from ..core.selection import select as _select
 
@@ -92,7 +93,7 @@ def rmsd(P, Q, *, over=None, pairs=None, atom="CA"):
     return _dispatch(P, Q, compute_rmsd_numpy, compute_rmsd_pytorch, compute_rmsd_jax)
 
 
-def tmscore(P, Q, *, over=None, pairs=None, atom="CA", L_ref=None):
+def tmscore(P, Q, *, over=None, pairs=None, atom="CA", L_ref=None, optimize=False):
     """
     TM-score between two coordinate arrays or two structures.
 
@@ -100,6 +101,11 @@ def tmscore(P, Q, *, over=None, pairs=None, atom="CA", L_ref=None):
     sets d0; for arrays it defaults to N, for structures to the number of
     reference residues in ``over`` (or, given only ``pairs``, in the reference
     chains those pairs touch).
+
+    By default the score is taken in the frame the inputs are in.  With
+    ``optimize=True`` it is the TM-score proper: the maximum over all rigid
+    superpositions of the paired points, found with the TM-score search
+    (:func:`~protein_design_tools.alignment.tmalign.tm_superpose`, NumPy).
     """
     if pairs is not None:
         pairs = list(pairs)
@@ -112,6 +118,11 @@ def tmscore(P, Q, *, over=None, pairs=None, atom="CA", L_ref=None):
         else:
             L_ref = len(_select(Q))
     P, Q = _prepare(P, Q, over, pairs, atom)
+    if optimize:
+        score, _, _ = _tm_superpose(
+            _np.asarray(P, dtype=float), _np.asarray(Q, dtype=float), L_ref
+        )
+        return score
     return _dispatch(
         P,
         Q,

@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional
 
 import numpy as np
 
+from ..core.geometry import kabsch
 from ..core.protein_structure import ProteinStructure
 from ..core.selection import Spec
 from .correspond import Pair, paired_coordinates
@@ -68,20 +69,6 @@ class Transform:
             for atom, (x, y, z) in zip(atoms, xyz):
                 atom.x, atom.y, atom.z = float(x), float(y), float(z)
         return target
-
-
-def kabsch(P: np.ndarray, Q: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Rotation ``R`` and translation ``t`` minimising ``|R @ P[i] + t - Q[i]|``
-    over the paired points (Kabsch via SVD; reflections are rejected).
-    """
-    P = np.asarray(P, dtype=float)
-    Q = np.asarray(Q, dtype=float)
-    cP, cQ = P.mean(axis=0), Q.mean(axis=0)
-    U, _, Vt = np.linalg.svd((P - cP).T @ (Q - cQ))
-    d = np.sign(np.linalg.det(Vt.T @ U.T)) or 1.0
-    R = Vt.T @ np.diag([1.0, 1.0, d]) @ U.T
-    return R, cQ - R @ cP
 
 
 def superpose(
