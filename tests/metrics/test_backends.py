@@ -34,6 +34,8 @@ def test_pytorch_metrics(pq):
     assert float(compute_rmsd_pytorch(P, Q)) == pytest.approx(DIST)
     assert float(compute_gdt_pytorch(P, Q)) == pytest.approx(50.0)
     assert float(compute_tmscore_pytorch(P, Q)) == pytest.approx(EXPECTED_TM)
+    half = compute_tmscore_pytorch(P[:60], Q[:60], L_ref=L)
+    assert float(half) == pytest.approx(EXPECTED_TM / 2)
     assert float(rmsd(P, Q)) == pytest.approx(DIST)  # dispatcher picks PyTorch
 
 
@@ -50,6 +52,8 @@ def test_jax_metrics(pq):
     assert float(compute_rmsd_jax(P, Q)) == pytest.approx(DIST, abs=1e-4)
     assert float(compute_gdt_jax(P, Q)) == pytest.approx(50.0, abs=1e-4)
     assert float(compute_tmscore_jax(P, Q)) == pytest.approx(EXPECTED_TM, abs=1e-4)
+    half = compute_tmscore_jax(P[:60], Q[:60], L_ref=L)
+    assert float(half) == pytest.approx(EXPECTED_TM / 2, abs=1e-4)
     assert float(rmsd(P, Q)) == pytest.approx(DIST, abs=1e-4)  # dispatcher -> JAX
 
 

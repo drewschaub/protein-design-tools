@@ -90,6 +90,31 @@ pip install -e ".[dev,all]"    # ...plus every optional backend
 pytest
 ```
 
+## Superpose on one selection, measure on another
+
+```python
+from protein_design_tools.io.pdb import read_pdb
+from protein_design_tools.alignment import superpose, correspond
+from protein_design_tools.metrics import rmsd, tmscore
+
+ref = read_pdb("ref.pdb")
+model = read_pdb("model.pdb")
+
+# Fit on the target chain A, then judge the binder chain B in that frame.
+fit = superpose(model, ref, on="A").apply(model)
+print(rmsd(fit, ref, over="B"), tmscore(fit, ref, over="B"))
+
+# Different numbering or indels?  Pair residues by sequence first
+# (BLOSUM62, affine gaps; pure NumPy, no Biopython).
+pairs = correspond(model, ref, chain_a="B", chain_b="B")
+print(rmsd(fit, ref, pairs=pairs))
+```
+
+Selections are `None` (everything), a chain ID, a list of chain IDs,
+`{"A": range(10, 50)}`, or explicit `(chain, number, insertion_code)` keys;
+`on` and `over` are resolved on the reference.  The `compute_*` functions
+score pre-paired coordinate arrays and do no alignment themselves.
+
 ## Quick Start
 
 Here's a quick example to get you started with Protein-Design Tools:

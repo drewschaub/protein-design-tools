@@ -36,6 +36,14 @@ protein\_design\_tools.core.residue module
    :undoc-members:
    :show-inheritance:
 
+protein\_design\_tools.core.selection module
+--------------------------------------------
+
+.. automodule:: protein_design_tools.core.selection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

@@ -1,89 +1,100 @@
 # tests/alignment/test_superpose.py
+"""superpose(mobile, ref, on=...) -> Transform, and friends."""
 
-import pytest
 import numpy as np
+import pytest
 
-from protein_design_tools.core.atom import Atom
-from protein_design_tools.core.residue import Residue
-from protein_design_tools.core.chain import Chain
-from protein_design_tools.core.protein_structure import ProteinStructure
-from protein_design_tools.alignment.superpose import (
-    superpose_structures,
-    apply_transform,
+from protein_design_tools.alignment import correspond, kabsch, superpose
+from protein_design_tools.metrics import rmsd
+from tests.helpers import (
+    ca_coords,
+    make_chain,
+    make_structure,
+    moved,
+    random_coords,
+    random_rigid,
+    shift_chain,
 )
 
+SEQ = "ACDEFGHIKLMNPQRSTVWY"
 
-def test_superpose_kabsch():
-    mobile = ProteinStructure()
-    target = ProteinStructure()
 
-    # Create chains
-    mobile_chain = Chain("A")
-    target_chain = Chain("A")
-    mobile.chains.append(mobile_chain)
-    target.chains.append(target_chain)
-
-    # Add a few residues with CA atoms
-    for i in range(3):
-        # Provide i_code as an empty string if your constructor is: Residue(res_seq, name, i_code)
-        mobile_res = Residue(i + 1, "ALA", "")
-        target_res = Residue(i + 1, "ALA", "")
-
-        # Create a CA Atom for each
-        # Just put random coords
-        atom_mobile = Atom(
-            atom_id=i + 1,
-            name="CA",
-            alt_loc="",
-            x=float(i),  # simple coords
-            y=float(i + 0.5),
-            z=float(i + 1),
-            occupancy=1.0,
-            temp_factor=0.0,
-            segment_id="",
-            element="C",
-            charge="",
-        )
-        atom_target = Atom(
-            atom_id=i + 1,
-            name="CA",
-            alt_loc="",
-            x=float(i + 2),  # offset to create difference
-            y=float(i + 2.5),
-            z=float(i + 3),
-            occupancy=1.0,
-            temp_factor=0.0,
-            segment_id="",
-            element="C",
-            charge="",
-        )
-
-        mobile_res.atoms.append(atom_mobile)
-        target_res.atoms.append(atom_target)
-
-        mobile_chain.residues.append(mobile_res)
-        target_chain.residues.append(target_res)
-
-    # Now we have a mobile and target structure each with 3 residues, each having a single CA.
-
-    # 1) compute transformation via kabsch on CA
-    transform = superpose_structures(
-        mobile, target, atom_type="CA", selection=None, method="kabsch"
+@pytest.fixture
+def ref():
+    rng = np.random.default_rng(10)
+    return make_structure(
+        make_chain("A", SEQ, random_coords(rng, 20)),
+        make_chain("B", SEQ[:12], random_coords(rng, 12)),
+        name="ref",
     )
 
-    # 2) apply transform to mobile in place
-    apply_transform(mobile, transform)
 
-    # 3) extract final coords and compare to target
-    final_mobile_coords = mobile.get_coordinates(atom_type="CA")
-    final_target_coords = target.get_coordinates(atom_type="CA")
+def test_kabsch_recovers_a_rigid_motion():
+    rng = np.random.default_rng(11)
+    P = random_coords(rng, 30)
+    R, t = random_rigid(rng)
+    R2, t2 = kabsch(P, P @ R.T + t)
+    np.testing.assert_allclose(R2, R, atol=1e-9)
+    np.testing.assert_allclose(t2, t, atol=1e-9)
 
-    # RMSD
-    diff = final_mobile_coords - final_target_coords
-    rmsd = np.sqrt(np.mean(np.sum(diff**2, axis=1)))
 
-    print("final_mobile_coords:\n", final_mobile_coords)
-    print("final_target_coords:\n", final_target_coords)
-    print("RMSD:", rmsd)
+def test_kabsch_never_returns_a_reflection():
+    rng = np.random.default_rng(12)
+    P = random_coords(rng, 30)
+    R, _ = kabsch(P, P * np.array([1.0, 1.0, -1.0]))  # mirror image
+    assert np.linalg.det(R) == pytest.approx(1.0)
 
-    assert rmsd < 1e-5, f"Kabsch superpose RMSD too high: {rmsd}"
+
+def test_superpose_recovers_the_whole_structure(ref):
+    rng = np.random.default_rng(13)
+    R, t = random_rigid(rng)
+    mobile = moved(ref, R, t)
+
+    fit = superpose(mobile, ref)
+    assert fit.n == 32 and fit.rmsd == pytest.approx(0.0, abs=1e-9)
+    np.testing.assert_allclose(fit.rotation @ R, np.eye(3), atol=1e-9)  # undoes R
+    np.testing.assert_allclose(fit.matrix[:3, :3], fit.rotation)
+    np.testing.assert_allclose(fit.matrix[:3, 3], fit.translation)
+
+    back = fit.apply(mobile)
+    np.testing.assert_allclose(ca_coords(back, "A"), ca_coords(ref, "A"), atol=1e-9)
+    np.testing.assert_allclose(ca_coords(back, "B"), ca_coords(ref, "B"), atol=1e-9)
+    # the input is untouched unless asked
+    np.testing.assert_allclose(ca_coords(mobile, "A"), ca_coords(ref, "A") @ R.T + t)
+    assert fit.apply(mobile, inplace=True) is mobile
+    np.testing.assert_allclose(ca_coords(mobile, "B"), ca_coords(ref, "B"), atol=1e-9)
+    np.testing.assert_allclose(fit.apply_to(np.zeros((1, 3)))[0], fit.translation)
+
+
+def test_superpose_on_one_chain_and_measure_another(ref):
+    rng = np.random.default_rng(14)
+    model = shift_chain(ref, "B", np.array([0.0, 0.0, 5.0]))  # binder moved 5 A
+    R, t = random_rigid(rng)
+    model = moved(model, R, t)
+
+    fit = superpose(model, ref, on="A")
+    assert fit.n == 20 and fit.rmsd == pytest.approx(0.0, abs=1e-9)
+    assert all(key[0] == "A" for _, key in fit.pairs)
+    placed = fit.apply(model)
+    assert rmsd(placed, ref, over="A") == pytest.approx(0.0, abs=1e-9)
+    assert rmsd(placed, ref, over="B") == pytest.approx(5.0)
+    assert rmsd(placed, ref) == pytest.approx(np.sqrt(12 * 25 / 32))
+    # fitting on everything instead spreads the error over both chains
+    assert 0.0 < superpose(model, ref).rmsd < 5.0
+
+
+def test_superpose_with_different_numbering_needs_pairs(ref):
+    renumbered = make_structure(
+        make_chain("A", SEQ, ca_coords(ref, "A"), numbering=range(101, 121))
+    )
+    with pytest.raises(ValueError, match="correspond"):
+        superpose(renumbered, ref)
+    pairs = correspond(renumbered, ref)
+    fit = superpose(renumbered, ref, pairs=pairs)
+    assert fit.n == 20 and fit.rmsd == pytest.approx(0.0, abs=1e-9)
+    assert rmsd(renumbered, ref, pairs=pairs) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_superpose_needs_three_pairs(ref):
+    with pytest.raises(ValueError, match="at least 3"):
+        superpose(ref, ref, on={"A": [1, 2]})
