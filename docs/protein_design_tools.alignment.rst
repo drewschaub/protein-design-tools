@@ -31,7 +31,12 @@ protein\_design\_tools.alignment.tmalign module
 Module contents
 ---------------
 
+.. The package re-exports functions named like its submodules (for example
+   ``rmsd`` the function and ``rmsd`` the module), so these entries are not
+   indexed; the submodule pages above hold the indexed, cross-referenceable ones.
+
 .. automodule:: protein_design_tools.alignment
    :members:
    :undoc-members:
    :show-inheritance:
+   :no-index:

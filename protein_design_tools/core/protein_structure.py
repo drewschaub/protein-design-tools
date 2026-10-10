@@ -202,16 +202,15 @@ class ProteinStructure:
 
         Examples
         --------
-        # Remove all water residues (HOH):
-        protein.remove_residues_if(lambda r: r.name == "HOH")
+        Remove all water residues (HOH)::
 
-        # Remove all non-standard amino acids:
-        standard_aa = {
-            "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY",
-            "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER",
-            "THR", "TRP", "TYR", "VAL"
-        }
-        protein.remove_residues_if(lambda r: r.name not in standard_aa)
+            protein.remove_residues_if(lambda r: r.name == "HOH")
+
+        Remove all non-standard amino acids::
+
+            protein.remove_residues_if(
+                lambda r: r.name not in ProteinStructure.STANDARD_RESIDUES
+            )
         """
         for chain in self.chains:
             new_list = []

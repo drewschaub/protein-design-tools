@@ -1,19 +1,7 @@
-protein_design_tools package
-============================
-
-.. automodule:: protein_design_tools
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Submodules
-----------
+API reference
+=============
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Submodules:
+   :maxdepth: 4
 
-   protein_design_tools.core
-   protein_design_tools.io
-   protein_design_tools.metrics
-   protein_design_tools.utils
+   protein_design_tools
